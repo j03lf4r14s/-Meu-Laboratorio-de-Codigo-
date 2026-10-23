@@ -184,16 +184,34 @@ h1{font-size:1.15rem;font-weight:700;display:flex;align-items:center;gap:10px;le
                     <button class="qr-preset" data-preset="wifi">📶 WiFi</button>
                     <button class="qr-preset" data-preset="vcard">👤 vCard</button>
                     <button class="qr-preset" data-preset="geo">📍 Localização</button>
+                    <button class="qr-preset" data-preset="image">🖼️ Imagem</button>
+                    <button class="qr-preset" data-preset="qrimg">📸 QR Imagem</button>
+                    <button class="qr-preset" data-preset="base64">📥 Base64</button>
                 </div>
             </div>
+
             <div class="qr-section">
-                <label class="qr-label" for="qr-content">📝 Conteúdo do QR Code</label>
+                <label class="qr-label">🖼️ QR com Imagem (upload — ícones/logos pequenos)</label>
+                <input type="file" accept="image/*" id="qr-img-input" style="padding:8px;border:1px dashed rgba(0,212,255,0.4);border-radius:8px;background:rgba(7,11,20,0.6);color:#e4e7eb;cursor:pointer;font-size:12px;width:100%;box-sizing:border-box;">
+                <div id="qr-img-result" style="display:none;gap:10px;align-items:center;flex-wrap:wrap;padding:10px;background:rgba(7,11,20,0.5);border-radius:8px;border:1px solid rgba(0,212,255,0.15);">
+                    <img id="qr-img-preview" style="max-height:56px;border-radius:6px;border:1px solid rgba(0,212,255,0.2);">
+                    <span id="qr-img-info" style="font-size:11px;color:#888;flex:1;min-width:120px;"></span>
+                    <button class="secondary-btn" id="qr-img-use" style="font-size:11px;padding:5px 10px;">Usar no QR</button>
+                    <button class="secondary-btn" id="qr-img-copy" style="font-size:11px;padding:5px 10px;">📋 Copiar Base64</button>
+                </div>
+                <p style="font-size:11px;color:var(--text-muted);">💡 QR code suporta até ~2.900 caracteres. Imagens acima disso não cabem — use o botão Copiar para hospedar o Base64 onde quiser e usar a URL.</p>
+            </div>
+
+            <div class="qr-section">
+                <label class="qr-label" for="qr-content">📝 Conteúdo do QR Code <span id="qr-char-count" style="color:var(--text-muted);font-weight:400;font-size:0.78rem;margin-left:auto;">0 caracteres</span></label>
                 <textarea id="qr-content" placeholder="Digite texto, URL, etc...">https://exemplo.com</textarea>
             </div>
+
             <div class="qr-section">
                 <label class="qr-label">📐 Tamanho: <span id="qr-size-val" style="color: var(--primary); font-weight: 700;">256px</span></label>
                 <input type="range" id="qr-size" min="128" max="512" value="256" step="32">
             </div>
+
             <div class="qr-section qr-row-2">
                 <div class="qr-field">
                     <label class="qr-label">🎨 Cor</label>
@@ -213,10 +231,66 @@ h1{font-size:1.15rem;font-weight:700;display:flex;align-items:center;gap:10px;le
                     </select>
                 </div>
             </div>
+
             <div class="qr-section qr-actions">
                 <button class="run-btn" id="qr-download">⬇️ Baixar PNG</button>
                 <button class="secondary-btn" id="qr-copy">📋 Copiar</button>
+                <button class="secondary-btn" id="qr-to-base64">🔗 QR em Base64</button>
                 <button class="danger-btn" id="qr-clear">🗑️ Limpar</button>
+            </div>
+
+            <div class="qr-section" id="qr-base64-section" style="display:none;">
+                <label class="qr-label">🔗 Base64 do QR (data URL PNG)</label>
+                <textarea id="qr-base64-output" readonly rows="4" style="padding:10px;font-family:'JetBrains Mono',monospace;font-size:10px;background:rgba(7,11,20,0.85);color:#22c55e;border:1px solid rgba(0,212,255,0.2);border-radius:8px;resize:vertical;word-break:break-all;box-sizing:border-box;width:100%;"></textarea>
+                <div style="display:flex;gap:6px;margin-top:4px;align-items:center;">
+                    <button class="secondary-btn" onclick="copyQrBase64()" style="font-size:11px;padding:5px 10px;">📋 Copiar</button>
+                    <span id="qr-base64-size" style="font-size:11px;color:var(--text-muted);"></span>
+                </div>
+            </div>
+
+            <!-- ===== BASE64 → IMAGEM ===== -->
+            <div class="qr-section" style="border-top:1px solid var(--border);padding-top:16px;margin-top:8px;">
+                <label class="qr-label" style="font-size:0.95rem;color:var(--primary);">🖼️ Base64 → Imagem</label>
+                <p style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Cole um Base64 (com ou sem prefixo <code style="background:rgba(0,212,255,.1);color:var(--primary);padding:1px 4px;border-radius:3px;">data:image/...</code>) e visualize a imagem</p>
+                <textarea id="b64-to-img-input" placeholder="Cole aqui o Base64..." rows="4" style="padding:10px;font-family:'JetBrains Mono',monospace;font-size:11px;background:rgba(7,11,20,0.85);color:#22c55e;border:1px solid rgba(0,212,255,0.2);border-radius:8px;resize:vertical;word-break:break-all;box-sizing:border-box;width:100%;"></textarea>
+                <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px;">
+                    <button class="secondary-btn" id="b64-to-img-btn" style="font-size:12px;">🖼️ Converter em Imagem</button>
+                    <button class="secondary-btn" id="b64-to-img-clear" style="font-size:12px;">🗑️ Limpar</button>
+                </div>
+                <div id="b64-to-img-result" style="display:none;flex-direction:column;gap:10px;padding:12px;background:rgba(7,11,20,0.5);border-radius:8px;border:1px solid rgba(0,212,255,0.15);margin-top:6px;">
+                    <div id="b64-to-img-meta" style="font-size:11px;color:#888;"></div>
+                    <div style="text-align:center;padding:8px;background:rgba(7,11,20,0.4);border-radius:8px;">
+                        <img id="b64-to-img-preview" style="max-width:100%;max-height:250px;border-radius:8px;border:1px solid rgba(0,212,255,0.25);box-shadow:0 0 20px rgba(0,212,255,0.2);">
+                    </div>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                        <button class="secondary-btn" id="b64-to-img-download" style="font-size:11px;padding:5px 10px;">⬇️ Baixar imagem</button>
+                        <button class="secondary-btn" id="b64-to-img-usarqr" style="font-size:11px;padding:5px 10px;">📥 Usar no QR</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== IMAGEM → BASE64 ===== -->
+            <div class="qr-section" style="border-top:1px solid var(--border);padding-top:16px;margin-top:8px;">
+                <label class="qr-label" style="font-size:0.95rem;color:var(--primary);">📤 Imagem → Base64</label>
+                <p style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Envie uma imagem para ler seu conteúdo em Base64</p>
+                <input type="file" accept="image/*" id="img-to-b64-input" style="padding:8px;border:1px dashed rgba(0,212,255,0.4);border-radius:8px;background:rgba(7,11,20,0.6);color:#e4e7eb;cursor:pointer;font-size:12px;width:100%;box-sizing:border-box;">
+                <div id="img-to-b64-result" style="display:none;flex-direction:column;gap:10px;padding:12px;background:rgba(7,11,20,0.5);border-radius:8px;border:1px solid rgba(0,212,255,0.15);margin-top:6px;">
+                    <div id="img-to-b64-meta" style="font-size:11px;color:#888;"></div>
+                    <div style="text-align:center;padding:8px;background:rgba(7,11,20,0.4);border-radius:8px;">
+                        <img id="img-to-b64-preview" style="max-width:100%;max-height:200px;border-radius:8px;border:1px solid rgba(0,212,255,0.25);box-shadow:0 0 20px rgba(0,212,255,0.2);">
+                    </div>
+                    <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;flex-wrap:wrap;">
+                        <span style="font-size:12px;color:#b0b8c8;">📝 Base64 gerado:</span>
+                        <span id="img-to-b64-chars" style="font-size:11px;color:var(--text-muted);"></span>
+                    </div>
+                    <textarea id="img-to-b64-output" readonly rows="5" style="padding:10px;font-family:'JetBrains Mono',monospace;font-size:10px;background:rgba(7,11,20,0.85);color:#22c55e;border:1px solid rgba(0,212,255,0.2);border-radius:8px;resize:vertical;word-break:break-all;box-sizing:border-box;width:100%;"></textarea>
+                    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+                        <button class="secondary-btn" id="img-to-b64-copy" style="font-size:11px;padding:5px 10px;">📋 Copiar Base64</button>
+                        <button class="secondary-btn" id="img-to-b64-copy-tag" style="font-size:11px;padding:5px 10px;">📋 Copiar &lt;img src&gt;</button>
+                        <button class="secondary-btn" id="img-to-b64-usarqr" style="font-size:11px;padding:5px 10px;">📥 Usar no QR</button>
+                        <button class="danger-btn" id="img-to-b64-clear" style="font-size:11px;padding:5px 10px;">🗑️ Limpar</button>
+                    </div>
+                </div>
             </div>
         </div>
 
@@ -351,7 +425,6 @@ function formatDate(ts) {
     return new Date(ts).toLocaleDateString('pt-BR') + ' ' + new Date(ts).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
 }
 
-/* ==== STORAGE ==== */
 const STORAGE_KEY = 'lab_code_saved_v1';
 let savedItems = (() => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch (e) { return []; } })();
 function persistSaved(items) {
@@ -366,7 +439,6 @@ function updateSavedBadge() {
     if (btn) btn.textContent = savedItems.length ? `💾 Salvos (${savedItems.length})` : '💾 Salvos';
 }
 
-/* ==== MODAL ==== */
 let modalResolve = null;
 function showModal(title, def = '', placeholder = '') {
     return new Promise(resolve => {
@@ -382,7 +454,6 @@ document.getElementById('modal-cancel').onclick = () => { document.getElementByI
 document.getElementById('modal-confirm').onclick = () => { const v = document.getElementById('modal-input').value.trim(); document.getElementById('modal-overlay').style.display = 'none'; if (modalResolve) modalResolve(v); modalResolve = null; };
 document.getElementById('modal-input').onkeydown = e => { if (e.key === 'Enter') document.getElementById('modal-confirm').click(); if (e.key === 'Escape') document.getElementById('modal-cancel').click(); };
 
-/* ==== SAVE / DELETE / RUN ==== */
 async function saveCurrentCode(lang, code) {
     if (!code || !code.trim()) { alert('Nada para salvar.'); return; }
     const def = `Meu ${lang} - ${new Date().toLocaleDateString('pt-BR')}`;
@@ -429,7 +500,6 @@ async function ensurePyodide(con) {
     con.textContent = '';
 }
 
-/* ==== FORMAT / MINIFY ==== */
 function applyEditorChange(newText) {
     const model = editor.getModel();
     const fullRange = model.getFullModelRange();
@@ -511,7 +581,6 @@ document.addEventListener('keydown', e => {
     }
 });
 
-/* ==== QR CODE ==== */
 const qrPresets = {
     url: 'https://exemplo.com',
     email: 'mailto:contato@exemplo.com?subject=Assunto&body=Olá!',
@@ -519,12 +588,26 @@ const qrPresets = {
     sms: 'sms:+5511999999999?body=Olá',
     wifi: 'WIFI:T:WPA;S:NomeDaRede;P:senha123;;',
     vcard: 'BEGIN:VCARD\nVERSION:3.0\nN:Silva;João\nFN:João Silva\nTEL:+5511999999999\nEMAIL:joao@exemplo.com\nEND:VCARD',
-    geo: 'geo:-23.5505,-46.6333'
+    geo: 'geo:-23.5505,-46.6333',
+    image: 'https://picsum.photos/500/500',
+    qrimg: 'https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=https://exemplo.com',
+    base64: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+ip1sAAAAASUVORK5CYII='
 };
+
+let qrImgDataUrl = null;
+
 function generateQR() {
     const wrap = document.getElementById('qr-canvas-wrap');
     wrap.innerHTML = '';
     const content = document.getElementById('qr-content').value;
+    const cc = document.getElementById('qr-char-count');
+    if (cc) {
+        const n = content.length;
+        cc.textContent = n + ' caracteres';
+        if (n > 2900) cc.style.color = '#ef4444';
+        else if (n > 2000) cc.style.color = '#f59e0b';
+        else cc.style.color = 'var(--text-muted)';
+    }
     if (!content || !content.trim()) { wrap.innerHTML = '<div class="qr-placeholder">📝 Digite algum conteúdo</div>'; return; }
     if (typeof QRCode === 'undefined') { wrap.innerHTML = '<div class="qr-placeholder" style="color:#ef4444;">❌ Biblioteca não carregou</div>'; return; }
     const size = parseInt(document.getElementById('qr-size').value);
@@ -533,7 +616,9 @@ function generateQR() {
     const ecc = document.getElementById('qr-ecc').value;
     try {
         new QRCode(wrap, { text: content, width: size, height: size, colorDark: color, colorLight: bg, correctLevel: QRCode.CorrectLevel[ecc] });
-    } catch (e) { wrap.innerHTML = '<div class="qr-placeholder" style="color:#ef4444;">❌ ' + escapeHtml(e.message) + '</div>'; }
+    } catch (e) {
+        wrap.innerHTML = '<div class="qr-placeholder" style="color:#ef4444;">❌ ' + escapeHtml(e.message) + '</div>';
+    }
 }
 function downloadQR() {
     const c = document.querySelector('#qr-canvas-wrap canvas');
@@ -568,14 +653,231 @@ document.getElementById('qr-color').addEventListener('input', debounceQR);
 document.getElementById('qr-bg').addEventListener('input', debounceQR);
 document.getElementById('qr-ecc').addEventListener('change', generateQR);
 document.querySelectorAll('.qr-preset').forEach(btn => {
-    btn.addEventListener('click', () => { const k = btn.dataset.preset; if (qrPresets[k]) { document.getElementById('qr-content').value = qrPresets[k]; generateQR(); } });
+    btn.addEventListener('click', () => {
+        const k = btn.dataset.preset;
+        if (qrPresets[k]) { document.getElementById('qr-content').value = qrPresets[k]; generateQR(); }
+    });
 });
+
+document.getElementById('qr-img-input').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+        qrImgDataUrl = ev.target.result;
+        document.getElementById('qr-img-preview').src = qrImgDataUrl;
+        document.getElementById('qr-img-result').style.display = 'flex';
+        const chars = qrImgDataUrl.length;
+        const kb = (file.size / 1024).toFixed(1);
+        const fits = chars < 2900;
+        const info = document.getElementById('qr-img-info');
+        info.innerHTML = '<strong style="color:' + (fits ? '#22c55e' : '#ef4444') + ';">' +
+            (fits ? '✅ Cabe no QR' : '⚠️ Imagem muito grande') + '</strong> · ' + chars + ' chars · ' + kb + ' KB' +
+            (!fits ? '<br><span style="font-size:10px;color:#888;">Dica: use o link da imagem em vez do Base64.</span>' : '');
+    };
+    reader.readAsDataURL(file);
+});
+document.getElementById('qr-img-use').onclick = () => {
+    if (!qrImgDataUrl) return;
+    if (qrImgDataUrl.length > 2900 && !confirm('⚠️ Este Base64 tem ' + qrImgDataUrl.length + ' caracteres — provavelmente NÃO caberá em um QR padrão. Continuar mesmo assim?')) return;
+    document.getElementById('qr-content').value = qrImgDataUrl;
+    generateQR();
+};
+document.getElementById('qr-img-copy').onclick = () => {
+    if (!qrImgDataUrl) return;
+    const done = () => { const b = document.getElementById('qr-img-copy'); const o = b.textContent; b.textContent = '✓ Copiado'; setTimeout(() => b.textContent = o, 1500); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(qrImgDataUrl).then(done).catch(() => {
+            const ta = document.createElement('textarea'); ta.value = qrImgDataUrl; document.body.appendChild(ta); ta.select();
+            try { document.execCommand('copy'); done(); } catch (e) { alert('Não foi possível copiar.'); }
+            document.body.removeChild(ta);
+        });
+    } else {
+        const ta = document.createElement('textarea'); ta.value = qrImgDataUrl; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); done(); } catch (e) { alert('Não foi possível copiar.'); }
+        document.body.removeChild(ta);
+    }
+};
+
 document.getElementById('qr-download').onclick = downloadQR;
 document.getElementById('qr-copy').onclick = copyQR;
 document.getElementById('qr-clear').onclick = () => {
     if (!document.getElementById('qr-content').value.trim()) return;
     if (!confirm('🗑️ Limpar?')) return;
     document.getElementById('qr-content').value = ''; generateQR();
+};
+
+window.copyQrBase64 = function() {
+    const ta = document.getElementById('qr-base64-output');
+    if (!ta.value) return;
+    ta.select();
+    try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(ta.value);
+        } else {
+            document.execCommand('copy');
+        }
+    } catch (err) { try { document.execCommand('copy'); } catch (e2) {} }
+    const btn = document.querySelector('#qr-base64-section button');
+    if (btn) { const o = btn.textContent; btn.textContent = '✓ Copiado'; setTimeout(() => btn.textContent = o, 1500); }
+};
+
+document.getElementById('qr-to-base64').onclick = () => {
+    const c = document.querySelector('#qr-canvas-wrap canvas');
+    const img = document.querySelector('#qr-canvas-wrap img');
+    if (!c && (!img || !img.src)) { alert('Gere um QR primeiro.'); return; }
+    let dataUrl = c ? c.toDataURL('image/png') : img.src;
+    const section = document.getElementById('qr-base64-section');
+    const ta = document.getElementById('qr-base64-output');
+    ta.value = dataUrl;
+    const kb = (dataUrl.length / 1024).toFixed(1);
+    document.getElementById('qr-base64-size').textContent = dataUrl.length + ' caracteres · ~' + kb + ' KB · Pronto para <img src="...">';
+    section.style.display = 'flex';
+    copyQrBase64();
+    flashBtn('qr-to-base64', '✓ Copiado!');
+};
+
+/* ==== BASE64 → IMAGEM ==== */
+document.getElementById('b64-to-img-btn').onclick = () => {
+    const input = document.getElementById('b64-to-img-input').value.trim();
+    if (!input) { alert('Cole um Base64 primeiro.'); return; }
+
+    const result = document.getElementById('b64-to-img-result');
+    const meta = document.getElementById('b64-to-img-meta');
+    const preview = document.getElementById('b64-to-img-preview');
+
+    let raw = input.replace(/\s+/g, '');
+    let mime = null;
+    let base64 = raw;
+
+    const m = raw.match(/^data:([^;,]+)(;base64)?,([\s\S]+)$/);
+    if (m) { mime = m[1]; base64 = m[3]; }
+
+    try {
+        const binary = atob(base64);
+        const b0 = binary.charCodeAt(0), b1 = binary.charCodeAt(1), b2 = binary.charCodeAt(2), b3 = binary.charCodeAt(3);
+        if (!mime || mime === 'application/octet-stream') {
+            if (b0 === 0xFF && b1 === 0xD8 && b2 === 0xFF) mime = 'image/jpeg';
+            else if (b0 === 0x89 && b1 === 0x50 && b2 === 0x4E && b3 === 0x47) mime = 'image/png';
+            else if (b0 === 0x47 && b1 === 0x49 && b2 === 0x46 && b3 === 0x38) mime = 'image/gif';
+            else if (b0 === 0x52 && b1 === 0x49 && b2 === 0x46 && b3 === 0x46) mime = 'image/webp';
+            else if (b0 === 0x42 && b1 === 0x4D) mime = 'image/bmp';
+            else mime = 'image/png';
+        }
+
+        const dataUrl = 'data:' + mime + ';base64,' + base64;
+        preview.src = dataUrl;
+
+        preview.onerror = () => {
+            meta.innerHTML = '<strong style="color:#ef4444;">❌ Não foi possível renderizar como imagem</strong>';
+            preview.src = '';
+        };
+        preview.onload = () => {
+            const kb = (base64.length * 0.75 / 1024).toFixed(1);
+            meta.innerHTML = '<strong style="color:#00d4ff;">' + mime + '</strong> · ~' + kb + ' KB · ' + base64.length + ' chars';
+        };
+
+        result.style.display = 'flex';
+    } catch (e) {
+        result.style.display = 'flex';
+        meta.innerHTML = '<strong style="color:#ef4444;">❌ Base64 inválido</strong>';
+        preview.src = '';
+    }
+};
+
+document.getElementById('b64-to-img-clear').onclick = () => {
+    document.getElementById('b64-to-img-input').value = '';
+    document.getElementById('b64-to-img-result').style.display = 'none';
+    document.getElementById('b64-to-img-preview').src = '';
+};
+
+document.getElementById('b64-to-img-download').onclick = () => {
+    const src = document.getElementById('b64-to-img-preview').src;
+    if (!src) return;
+    const ext = (src.match(/data:image\/(\w+)/) || [, 'png'])[1].replace('jpeg', 'jpg');
+    const a = document.createElement('a');
+    a.href = src;
+    a.download = 'imagem-' + Date.now() + '.' + ext;
+    a.click();
+};
+
+document.getElementById('b64-to-img-usarqr').onclick = () => {
+    const src = document.getElementById('b64-to-img-preview').src;
+    if (!src) return;
+    if (src.length > 2900 && !confirm('⚠️ ' + src.length + ' chars — pode não caber em QR padrão. Continuar?')) return;
+    document.getElementById('qr-content').value = src;
+    generateQR();
+    document.getElementById('qr-content').scrollIntoView({ behavior: 'smooth', block: 'center' });
+};
+
+/* ==== IMAGEM → BASE64 ==== */
+let imgToB64DataUrl = null;
+document.getElementById('img-to-b64-input').addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) { alert('Por favor, selecione um arquivo de imagem.'); return; }
+    const reader = new FileReader();
+    reader.onload = ev => {
+        imgToB64DataUrl = ev.target.result;
+        document.getElementById('img-to-b64-preview').src = imgToB64DataUrl;
+        document.getElementById('img-to-b64-output').value = imgToB64DataUrl;
+        document.getElementById('img-to-b64-result').style.display = 'flex';
+        const kb = (file.size / 1024).toFixed(1);
+        const b64kb = (imgToB64DataUrl.length / 1024).toFixed(1);
+        document.getElementById('img-to-b64-meta').innerHTML =
+            '<strong style="color:#00d4ff;">' + escapeHtml(file.type) + '</strong> · ' +
+            kb + ' KB original · ~' + b64kb + ' KB em Base64';
+        const chars = imgToB64DataUrl.length;
+        const charsEl = document.getElementById('img-to-b64-chars');
+        charsEl.textContent = chars + ' caracteres';
+        if (chars > 2900) charsEl.style.color = '#ef4444';
+        else if (chars > 2000) charsEl.style.color = '#f59e0b';
+        else charsEl.style.color = 'var(--text-muted)';
+    };
+    reader.readAsDataURL(file);
+});
+
+document.getElementById('img-to-b64-copy').onclick = () => {
+    if (!imgToB64DataUrl) return;
+    const done = () => { const b = document.getElementById('img-to-b64-copy'); const o = b.textContent; b.textContent = '✓ Copiado'; setTimeout(() => b.textContent = o, 1500); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(imgToB64DataUrl).then(done).catch(fallback);
+    } else { fallback(); }
+    function fallback() {
+        const ta = document.createElement('textarea'); ta.value = imgToB64DataUrl; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); done(); } catch (e) { alert('Não foi possível copiar.'); }
+        document.body.removeChild(ta);
+    }
+};
+
+document.getElementById('img-to-b64-copy-tag').onclick = () => {
+    if (!imgToB64DataUrl) return;
+    const tag = '<img src="' + imgToB64DataUrl + '" alt="imagem">';
+    const done = () => { const b = document.getElementById('img-to-b64-copy-tag'); const o = b.textContent; b.textContent = '✓ Copiado'; setTimeout(() => b.textContent = o, 1500); };
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(tag).then(done).catch(fallback);
+    } else { fallback(); }
+    function fallback() {
+        const ta = document.createElement('textarea'); ta.value = tag; document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); done(); } catch (e) { alert('Não foi possível copiar.'); }
+        document.body.removeChild(ta);
+    }
+};
+
+document.getElementById('img-to-b64-usarqr').onclick = () => {
+    if (!imgToB64DataUrl) return;
+    if (imgToB64DataUrl.length > 2900 && !confirm('⚠️ ' + imgToB64DataUrl.length + ' chars — pode não caber em QR padrão. Continuar?')) return;
+    document.getElementById('qr-content').value = imgToB64DataUrl;
+    generateQR();
+    document.getElementById('qr-content').scrollIntoView({ behavior: 'smooth', block: 'center' });
+};
+
+document.getElementById('img-to-b64-clear').onclick = () => {
+    document.getElementById('img-to-b64-input').value = '';
+    document.getElementById('img-to-b64-result').style.display = 'none';
+    document.getElementById('img-to-b64-preview').src = '';
+    document.getElementById('img-to-b64-output').value = '';
+    imgToB64DataUrl = null;
 };
 
 /* ==== LIBRARY ==== */
@@ -680,9 +982,6 @@ document.getElementById('library-import-input').onchange = async e => {
     e.target.value = '';
 };
 
-/* ======================================================
-   GERADOR DE CÓDIGO HTML
-   ====================================================== */
 function wrapHtml(title, body, extraHead = '') {
     return `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -712,7 +1011,6 @@ ${body}
 }
 
 const generators = {
-    /* === FORMULÁRIOS === */
     button: wrapHtml('Button', `<button onclick="alert('Botão clicado!')" style="background: linear-gradient(135deg, #00d4ff, #6366f1); color: #fff; border: none; padding: 12px 28px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 15px; box-shadow: 0 4px 16px rgba(0, 212, 255, 0.4);">Clique em mim</button>`),
     checkbox: wrapHtml('Checkbox', `<label style="display: flex; gap: 10px; align-items: center; cursor: pointer; font-size: 15px;"><input type="checkbox" checked style="width: 20px; height: 20px; accent-color: #00d4ff; cursor: pointer;"> Aceito os termos e condições</label>`),
     radio: wrapHtml('Radio Button', `<fieldset style="border: 1px solid rgba(0, 212, 255, 0.3); padding: 16px; border-radius: 10px; margin: 0;"><legend style="padding: 0 8px; color: #00d4ff; font-weight: 600;">Escolha uma cor:</legend><label style="display: flex; gap: 10px; align-items: center; cursor: pointer; padding: 6px 0;"><input type="radio" name="cor" value="azul" checked style="accent-color: #00d4ff;"> Azul</label><label style="display: flex; gap: 10px; align-items: center; cursor: pointer; padding: 6px 0;"><input type="radio" name="cor" value="verde" style="accent-color: #00d4ff;"> Verde</label><label style="display: flex; gap: 10px; align-items: center; cursor: pointer; padding: 6px 0;"><input type="radio" name="cor" value="vermelho" style="accent-color: #00d4ff;"> Vermelho</label></fieldset>`),
@@ -731,11 +1029,10 @@ const generators = {
     textarea: wrapHtml('Textarea', `<label>Mensagem:</label><textarea rows="5" placeholder="Digite sua mensagem..."></textarea>`),
     url: wrapHtml('URL Input', `<label>URL:</label><input type="url" placeholder="https://exemplo.com">`),
 
-    /* === MÍDIA === */
     audio: wrapHtml('Audio — Upload & Base64', `
 <div style="display:flex;flex-direction:column;gap:16px;">
   <label style="display:flex;flex-direction:column;gap:8px;cursor:pointer;">
-    <span style="font-size:14px;color:#b0b8c8;">🎵 Escolha um arquivo de áudio (MP3, WAV, OGG...):</span>
+    <span style="font-size:14px;color:#b0b8c8;">🎵 Escolha um arquivo de áudio:</span>
     <input type="file" accept="audio/*" id="audio-input" style="padding:10px;border:1px dashed rgba(0,212,255,0.4);border-radius:8px;background:rgba(7,11,20,0.6);color:#e4e7eb;cursor:pointer;font-size:13px;width:100%;box-sizing:border-box;">
   </label>
   <div id="audio-preview-wrap" style="display:none;flex-direction:column;gap:12px;">
@@ -760,8 +1057,7 @@ const generators = {
   var codeArea = document.getElementById('audio-code');
   var sizeInfo = document.getElementById('audio-size');
   input.addEventListener('change', function(e){
-    var file = e.target.files[0];
-    if(!file) return;
+    var file = e.target.files[0]; if(!file) return;
     var reader = new FileReader();
     reader.onload = function(ev){
       var dataUrl = ev.target.result;
@@ -769,23 +1065,18 @@ const generators = {
       previewAudio.src = dataUrl;
       codeArea.value = '<audio controls>\\n  <source src="' + dataUrl + '" type="' + mime + '">\\n  Seu navegador não suporta áudio.\\n</audio>';
       var kb = (dataUrl.length/1024).toFixed(1);
-      var origKb = (file.size/1024).toFixed(1);
       var mb = (dataUrl.length/1024/1024).toFixed(2);
-      sizeInfo.textContent = '📊 Base64: ' + (dataUrl.length > 1024*1024 ? mb + ' MB' : kb + ' KB') + ' · Original: ' + origKb + ' KB · ' + file.name;
+      sizeInfo.textContent = '📊 Base64: ' + (dataUrl.length > 1024*1024 ? mb + ' MB' : kb + ' KB') + ' · Original: ' + (file.size/1024).toFixed(1) + ' KB · ' + file.name;
       previewWrap.style.display = 'flex';
     };
     reader.readAsDataURL(file);
   });
   window.copyAudioCode = function(){
     codeArea.select();
-    try {
-      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(codeArea.value); }
-      else { document.execCommand('copy'); }
-    } catch(err){ try { document.execCommand('copy'); } catch(e2){} }
-    var btn = document.getElementById('copy-audio-btn');
-    var orig = btn.textContent;
-    btn.textContent = '✓ Copiado!';
-    setTimeout(function(){ btn.textContent = orig; }, 1500);
+    try { if(navigator.clipboard) navigator.clipboard.writeText(codeArea.value); else document.execCommand('copy'); }
+    catch(err){ try { document.execCommand('copy'); } catch(e2){} }
+    var btn = document.getElementById('copy-audio-btn'); var orig = btn.textContent;
+    btn.textContent = '✓ Copiado!'; setTimeout(function(){ btn.textContent = orig; }, 1500);
   };
 })();
 <\/script>
@@ -794,7 +1085,7 @@ const generators = {
     'image-tag': wrapHtml('Image Tag — Upload & Base64', `
 <div style="display:flex;flex-direction:column;gap:16px;">
   <label style="display:flex;flex-direction:column;gap:8px;cursor:pointer;">
-    <span style="font-size:14px;color:#b0b8c8;">📁 Escolha uma imagem do seu dispositivo:</span>
+    <span style="font-size:14px;color:#b0b8c8;">📁 Escolha uma imagem:</span>
     <input type="file" accept="image/*" id="img-input" style="padding:10px;border:1px dashed rgba(0,212,255,0.4);border-radius:8px;background:rgba(7,11,20,0.6);color:#e4e7eb;cursor:pointer;font-size:13px;width:100%;box-sizing:border-box;">
   </label>
   <div id="preview-wrap" style="display:none;flex-direction:column;gap:12px;">
@@ -819,34 +1110,24 @@ const generators = {
   var codeArea = document.getElementById('img-code');
   var sizeInfo = document.getElementById('img-size');
   input.addEventListener('change', function(e){
-    var file = e.target.files[0];
-    if(!file) return;
+    var file = e.target.files[0]; if(!file) return;
     var reader = new FileReader();
     reader.onload = function(ev){
       var dataUrl = ev.target.result;
       previewImg.src = dataUrl;
       var safeName = file.name.replace(/"/g, '&quot;');
       codeArea.value = '<img src="' + dataUrl + '" alt="' + safeName + '">';
-      var kb = (dataUrl.length/1024).toFixed(1);
-      var origKb = (file.size/1024).toFixed(1);
-      sizeInfo.textContent = '📊 Base64: ' + kb + ' KB · Original: ' + origKb + ' KB · ' + file.name;
+      sizeInfo.textContent = '📊 Base64: ' + (dataUrl.length/1024).toFixed(1) + ' KB · Original: ' + (file.size/1024).toFixed(1) + ' KB · ' + file.name;
       previewWrap.style.display = 'flex';
     };
     reader.readAsDataURL(file);
   });
   window.copyImgCode = function(){
     codeArea.select();
-    try {
-      if(navigator.clipboard && navigator.clipboard.writeText){
-        navigator.clipboard.writeText(codeArea.value);
-      } else {
-        document.execCommand('copy');
-      }
-    } catch(err){ try { document.execCommand('copy'); } catch(e2){} }
-    var btn = document.getElementById('copy-img-btn');
-    var orig = btn.textContent;
-    btn.textContent = '✓ Copiado!';
-    setTimeout(function(){ btn.textContent = orig; }, 1500);
+    try { if(navigator.clipboard) navigator.clipboard.writeText(codeArea.value); else document.execCommand('copy'); }
+    catch(err){ try { document.execCommand('copy'); } catch(e2){} }
+    var btn = document.getElementById('copy-img-btn'); var orig = btn.textContent;
+    btn.textContent = '✓ Copiado!'; setTimeout(function(){ btn.textContent = orig; }, 1500);
   };
 })();
 <\/script>
@@ -855,7 +1136,7 @@ const generators = {
     video: wrapHtml('Video — Upload & Base64', `
 <div style="display:flex;flex-direction:column;gap:16px;">
   <label style="display:flex;flex-direction:column;gap:8px;cursor:pointer;">
-    <span style="font-size:14px;color:#b0b8c8;">🎬 Escolha um arquivo de vídeo (MP4, WebM...):</span>
+    <span style="font-size:14px;color:#b0b8c8;">🎬 Escolha um vídeo:</span>
     <input type="file" accept="video/*" id="video-input" style="padding:10px;border:1px dashed rgba(0,212,255,0.4);border-radius:8px;background:rgba(7,11,20,0.6);color:#e4e7eb;cursor:pointer;font-size:13px;width:100%;box-sizing:border-box;">
   </label>
   <div id="video-preview-wrap" style="display:none;flex-direction:column;gap:12px;">
@@ -880,8 +1161,7 @@ const generators = {
   var codeArea = document.getElementById('video-code');
   var sizeInfo = document.getElementById('video-size');
   input.addEventListener('change', function(e){
-    var file = e.target.files[0];
-    if(!file) return;
+    var file = e.target.files[0]; if(!file) return;
     var reader = new FileReader();
     reader.onload = function(ev){
       var dataUrl = ev.target.result;
@@ -889,24 +1169,18 @@ const generators = {
       previewVideo.src = dataUrl;
       codeArea.value = '<video controls width="100%">\\n  <source src="' + dataUrl + '" type="' + mime + '">\\n  Seu navegador não suporta vídeo.\\n</video>';
       var kb = (dataUrl.length/1024).toFixed(1);
-      var origKb = (file.size/1024).toFixed(1);
       var mb = (dataUrl.length/1024/1024).toFixed(2);
-      var origMb = (file.size/1024/1024).toFixed(2);
-      sizeInfo.textContent = '📊 Base64: ' + (dataUrl.length > 1024*1024 ? mb + ' MB' : kb + ' KB') + ' · Original: ' + (file.size > 1024*1024 ? origMb + ' MB' : origKb + ' KB') + ' · ' + file.name;
+      sizeInfo.textContent = '📊 Base64: ' + (dataUrl.length > 1024*1024 ? mb + ' MB' : kb + ' KB') + ' · Original: ' + (file.size > 1024*1024 ? (file.size/1024/1024).toFixed(2) + ' MB' : (file.size/1024).toFixed(1) + ' KB') + ' · ' + file.name;
       previewWrap.style.display = 'flex';
     };
     reader.readAsDataURL(file);
   });
   window.copyVideoCode = function(){
     codeArea.select();
-    try {
-      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(codeArea.value); }
-      else { document.execCommand('copy'); }
-    } catch(err){ try { document.execCommand('copy'); } catch(e2){} }
-    var btn = document.getElementById('copy-video-btn');
-    var orig = btn.textContent;
-    btn.textContent = '✓ Copiado!';
-    setTimeout(function(){ btn.textContent = orig; }, 1500);
+    try { if(navigator.clipboard) navigator.clipboard.writeText(codeArea.value); else document.execCommand('copy'); }
+    catch(err){ try { document.execCommand('copy'); } catch(e2){} }
+    var btn = document.getElementById('copy-video-btn'); var orig = btn.textContent;
+    btn.textContent = '✓ Copiado!'; setTimeout(function(){ btn.textContent = orig; }, 1500);
   };
 })();
 <\/script>
@@ -914,7 +1188,6 @@ const generators = {
 
     iframe: wrapHtml('iFrame', `<iframe srcdoc="<body style='font-family:sans-serif;background:#f0f4f8;margin:0;padding:20px'><h3 style='color:#0066cc;margin-top:0'>Olá do iframe!</h3><p>Este conteúdo está dentro de um iframe.</p></body>" width="100%" height="180" style="border: 1px solid rgba(0, 212, 255, 0.3); border-radius: 10px;" title="Exemplo"></iframe>`),
 
-    /* === TEXTO === */
     bdo: wrapHtml('BDO Tag', `<p>Texto normal: Olá Mundo</p><p>Com <strong>&lt;bdo dir="rtl"&gt;</strong>: <bdo dir="rtl" style="color: #00d4ff; font-weight: 600;">Olá Mundo</bdo></p>`),
     code: wrapHtml('Code Tag', `<p>Use <code style="background: rgba(0, 212, 255, 0.15); color: #00d4ff; padding: 3px 8px; border-radius: 4px; font-family: monospace;">console.log()</code> para depurar.</p><p>Exemplo: <code style="background: rgba(168, 85, 247, 0.15); color: #a855f7; padding: 3px 8px; border-radius: 4px; font-family: monospace;">npm install</code></p>`),
     cite: wrapHtml('Cite Tag', `<p>O livro <cite style="color: #00d4ff; font-style: italic;">Dom Casmurro</cite> foi escrito por Machado de Assis.</p>`),
@@ -928,13 +1201,11 @@ const generators = {
     hyperlink: wrapHtml('Hyperlink', `<p>Visite o <a href="https://developer.mozilla.org" target="_blank" style="color: #00d4ff; text-decoration: none; border-bottom: 1px solid #00d4ff;">MDN Web Docs</a> para aprender mais.</p><p>Ou envie um <a href="mailto:contato@exemplo.com" style="color: #a855f7;">email</a>.</p>`),
     list: wrapHtml('List Tags', `<h4 style="color: #00d4ff; margin: 0 0 8px;">Lista não ordenada:</h4><ul style="margin: 0 0 20px; padding-left: 20px;"><li>Maçã</li><li>Banana</li><li>Laranja</li></ul><h4 style="color: #00d4ff; margin: 0 0 8px;">Lista ordenada:</h4><ol style="margin: 0; padding-left: 20px;"><li>Primeiro</li><li>Segundo</li><li>Terceiro</li></ol>`),
 
-    /* === INTERATIVOS === */
     details: wrapHtml('Details', `<details style="background: rgba(0, 212, 255, 0.05); padding: 14px 18px; border-radius: 10px; border: 1px solid rgba(0, 212, 255, 0.2);"><summary style="cursor: pointer; font-weight: 600; color: #00d4ff;">Clique para expandir</summary><p style="margin: 12px 0 0;">Este é o conteúdo que estava escondido!</p></details>`),
     dialog: wrapHtml('Dialog', `<button onclick="document.getElementById('myDialog').showModal()" style="background: linear-gradient(135deg, #00d4ff, #6366f1); color: #fff; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 15px;">Abrir Diálogo</button><dialog id="myDialog" style="background: #141a2e; color: #e4e7eb; border: 1px solid rgba(0, 212, 255, 0.4); border-radius: 12px; padding: 24px; max-width: 400px;"><h3 style="margin: 0 0 12px; color: #00d4ff;">Olá!</h3><p style="margin: 0 0 16px;">Este é um diálogo nativo do HTML.</p><button onclick="document.getElementById('myDialog').close()" style="background: #ef4444; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600;">Fechar</button></dialog>`),
 
-    /* === DADOS === */
     table: wrapHtml('Table', `<table style="width: 100%; border-collapse: collapse; font-size: 14px;"><thead><tr style="background: rgba(0, 212, 255, 0.15);"><th style="padding: 10px; border: 1px solid rgba(0, 212, 255, 0.3); text-align: left;">Nome</th><th style="padding: 10px; border: 1px solid rgba(0, 212, 255, 0.3); text-align: left;">Idade</th><th style="padding: 10px; border: 1px solid rgba(0, 212, 255, 0.3); text-align: left;">Cidade</th></tr></thead><tbody><tr><td style="padding: 10px; border: 1px solid rgba(0, 212, 255, 0.2);">Ana</td><td style="padding: 10px; border: 1px solid rgba(0, 212, 255, 0.2);">28</td><td style="padding: 10px; border: 1px solid rgba(0, 212, 255, 0.2);">São Paulo</td></tr><tr><td style="padding: 10px; border: 1px solid rgba(0, 212, 255, 0.2);">Bruno</td><td style="padding: 10px; border: 1px solid rgba(0, 212, 255, 0.2);">34</td><td style="padding: 10px; border: 1px solid rgba(0, 212, 255, 0.2);">Rio de Janeiro</td></tr><tr><td style="padding: 10px; border: 1px solid rgba(0, 212, 255, 0.2);">Carla</td><td style="padding: 10px; border: 1px solid rgba(0, 212, 255, 0.2);">22</td><td style="padding: 10px; border: 1px solid rgba(0, 212, 255, 0.2);">Belo Horizonte</td></tr></tbody></table>`),
-    meter: wrapHtml('Meter Tag', `<label>Uso de disco: 70%</label><meter value="70" min="0" max="100" low="40" high="80" optimum="20" style="width: 100%; height: 26px;"></meter><p style="font-size: 12px; color: #888; margin: 8px 0 0;">Barras coloridas indicam estado (verde=ótimo, amarelo=alerta, vermelho=crítico).</p>`),
+    meter: wrapHtml('Meter Tag', `<label>Uso de disco: 70%</label><meter value="70" min="0" max="100" low="40" high="80" optimum="20" style="width: 100%; height: 26px;"></meter>`),
     progress: wrapHtml('Progress Tag', `<label>Progresso: 65%</label><progress value="65" max="100" style="width: 100%; height: 26px; accent-color: #00d4ff;"></progress><p style="font-size: 13px; color: #888; margin: 16px 0 6px;">Barra indeterminada:</p><progress style="width: 100%; height: 26px; accent-color: #a855f7;"></progress>`),
 };
 
@@ -1004,7 +1275,6 @@ function renderGenerators() {
             </div>
         </div>
     `).join('');
-
     container.querySelectorAll('.gen-card').forEach(card => {
         card.addEventListener('click', () => loadGenerator(card.dataset.gen));
     });
@@ -1013,17 +1283,11 @@ function renderGenerators() {
 function loadGenerator(key) {
     const code = generators[key];
     if (!code) return;
-
-    if (currentLang === 'html' && editor) {
-        savedContent.html = editor.getValue();
-    }
-
+    if (currentLang === 'html' && editor) savedContent.html = editor.getValue();
     savedContent.html = code;
     currentLang = 'html';
-
     document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
     document.querySelector('.lang-btn[data-lang="html"]').classList.add('active');
-
     document.getElementById('editor-container').style.display = 'block';
     document.getElementById('generator-container').classList.remove('active');
     document.getElementById('library-container').classList.remove('active');
@@ -1031,13 +1295,11 @@ function loadGenerator(key) {
     document.getElementById('output').style.display = 'block';
     document.getElementById('console-output').style.display = 'none';
     document.getElementById('qr-output').classList.remove('active');
-
     ['save-btn', 'run-btn', 'delete-btn', 'format-btn', 'minify-btn'].forEach(id => {
         document.getElementById(id).style.display = 'inline-block';
     });
     document.getElementById('pane-title').textContent = 'Código';
     document.getElementById('output-title').textContent = 'Resultado';
-
     if (editor && editor.getModel()) {
         monaco.editor.setModelLanguage(editor.getModel(), 'html');
         editor.setValue(code);
@@ -1045,7 +1307,6 @@ function loadGenerator(key) {
     updateHtmlPreview();
 }
 
-/* ==== MONACO ==== */
 require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs' } });
 require(['vs/editor/editor.main'], function () {
     monaco.editor.defineTheme('tech-dark', {
@@ -1083,7 +1344,6 @@ require(['vs/editor/editor.main'], function () {
     updateHtmlPreview();
 });
 
-/* ==== TABS ==== */
 document.querySelectorAll('.lang-btn').forEach(btn => {
     btn.addEventListener('click', () => {
         document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
@@ -1098,7 +1358,6 @@ function switchMode(lang) {
     }
     const prev = currentLang;
     currentLang = lang;
-
     const edEl = document.getElementById('editor-container');
     const genEl = document.getElementById('generator-container');
     const libEl = document.getElementById('library-container');
@@ -1113,7 +1372,6 @@ function switchMode(lang) {
     const minBtn = document.getElementById('minify-btn');
     const title = document.getElementById('pane-title');
     const outputTitle = document.getElementById('output-title');
-
     edEl.style.display = 'none';
     genEl.classList.remove('active');
     libEl.classList.remove('active');
@@ -1122,45 +1380,27 @@ function switchMode(lang) {
     con.style.display = 'none';
     qrOut.classList.remove('active');
     [saveBtn, runBtn, delBtn, fmtBtn, minBtn].forEach(b => b.style.display = 'none');
-
     if (lang === 'library') {
-        libEl.classList.add('active');
-        title.textContent = 'Códigos Salvos';
-        outputTitle.textContent = 'Resultado';
-        iframe.style.display = 'block';
-        renderLibrary(document.getElementById('library-search').value);
-        return;
+        libEl.classList.add('active'); title.textContent = 'Códigos Salvos'; outputTitle.textContent = 'Resultado';
+        iframe.style.display = 'block'; renderLibrary(document.getElementById('library-search').value); return;
     }
-
     if (lang === 'qr') {
-        qrEl.classList.add('active');
-        title.textContent = '📱 Gerador de QR Code';
-        outputTitle.textContent = '📱 QR Code';
-        qrOut.classList.add('active');
-        generateQR();
-        return;
+        qrEl.classList.add('active'); title.textContent = '📱 Gerador de QR Code'; outputTitle.textContent = '📱 QR Code';
+        qrOut.classList.add('active'); generateQR(); return;
     }
-
     if (lang === 'generator') {
-        genEl.classList.add('active');
-        title.textContent = '🎨 Gerador HTML';
-        outputTitle.textContent = 'Resultado';
-        iframe.style.display = 'block';
-        return;
+        genEl.classList.add('active'); title.textContent = '🎨 Gerador HTML'; outputTitle.textContent = 'Resultado';
+        iframe.style.display = 'block'; return;
     }
-
     edEl.style.display = 'block';
     [saveBtn, runBtn, delBtn, fmtBtn, minBtn].forEach(b => b.style.display = 'inline-block');
-    title.textContent = 'Código';
-    outputTitle.textContent = 'Resultado';
-
+    title.textContent = 'Código'; outputTitle.textContent = 'Resultado';
     if (editor && editor.getModel()) {
         monaco.editor.setModelLanguage(editor.getModel(), lang === 'html' ? 'html' : 'python');
         editor.setValue(savedContent[lang] || '');
     }
     if (lang === 'html') {
-        iframe.style.display = 'block';
-        updateHtmlPreview();
+        iframe.style.display = 'block'; updateHtmlPreview();
     } else {
         con.style.display = 'block';
         if (prev !== 'python') con.textContent = '// O resultado aparecerá aqui.\n// Clique em ▶ Executar.';
@@ -1169,7 +1409,6 @@ function switchMode(lang) {
 
 function updateHtmlPreview() { document.getElementById('output').srcdoc = editor.getValue(); }
 
-/* ==== INIT ==== */
 renderGenerators();
 updateSavedBadge();
 </script>
