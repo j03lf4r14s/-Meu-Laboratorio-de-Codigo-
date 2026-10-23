@@ -1,893 +1,929 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editor de Testes Local</title>
-    <link rel="stylesheet" data-name="vs/editor/editor.main" href="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/editor/editor.main.min.css">
-    <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f5f5f5;
-            color: #333;
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
-        header {
-            background-color: #ffffff;
-            padding: 12px 24px;
-            border-bottom: 1px solid #e0e0e0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
-        }
-        h1 { font-size: 1.2rem; font-weight: 600; }
-        .lang-selector { display: flex; gap: 8px; flex-wrap: wrap; }
-        .lang-btn {
-            padding: 6px 16px;
-            border: 1px solid #d0d0d0;
-            border-radius: 20px;
-            background-color: #fff;
-            cursor: pointer;
-            font-size: 0.9rem;
-            transition: all 0.2s ease;
-        }
-        .lang-btn:hover { border-color: #007bff; color: #007bff; }
-        .lang-btn.active { background-color: #007bff; color: white; border-color: #007bff; }
-        .container { display: flex; flex: 1; overflow: hidden; }
-        .editor-pane, .output-pane { flex: 1; display: flex; flex-direction: column; min-width: 0; }
-        .editor-pane { border-right: 1px solid #e0e0e0; }
-        .pane-header {
-            padding: 8px 16px;
-            background-color: #fafafa;
-            border-bottom: 1px solid #e0e0e0;
-            font-size: 0.85rem;
-            color: #666;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 8px;
-        }
-        #editor-container { flex: 1; height: 100%; width: 100%; }
-        #output { flex: 1; width: 100%; border: none; background-color: #ffffff; }
-        #console-output {
-            flex: 1; width: 100%; padding: 16px;
-            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
-            font-size: 0.9rem; background-color: #1e1e1e; color: #d4d4d4;
-            overflow-y: auto; white-space: pre-wrap; display: none;
-        }
-        .run-btn {
-            background-color: #28a745; color: white; border: none;
-            padding: 6px 20px; border-radius: 4px; cursor: pointer;
-            font-weight: 500; font-size: 0.9rem;
-        }
-        .run-btn:disabled { background-color: #6c757d; cursor: wait; }
-        .secondary-btn {
-            background-color: #ffffff; color: #555;
-            border: 1px solid #d0d0d0; padding: 6px 12px;
-            border-radius: 4px; cursor: pointer; font-size: 0.85rem;
-        }
-        .secondary-btn:hover { background-color: #f0f0f0; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚡ Meu Laboratório de Código ⚡</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" data-name="vs/editor/editor.main" href="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/editor/editor.main.min.css">
+<style>
+:root {
+    --bg-0: #070b14;
+    --bg-1: #0d1220;
+    --bg-2: #141a2e;
+    --surface: rgba(20, 26, 46, 0.7);
+    --border: rgba(100, 140, 255, 0.15);
+    --border-strong: rgba(100, 140, 255, 0.35);
+    --text: #e4e7eb;
+    --text-dim: #8892a6;
+    --text-muted: #5a6478;
+    --primary: #00d4ff;
+    --primary-2: #6366f1;
+    --primary-glow: rgba(0, 212, 255, 0.4);
+    --accent: #a855f7;
+    --success: #22c55e;
+    --success-glow: rgba(34, 197, 94, 0.4);
+    --danger: #ef4444;
+    --danger-glow: rgba(239, 68, 68, 0.35);
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    background:
+        radial-gradient(ellipse 800px 600px at 0% 0%, rgba(0, 212, 255, 0.1), transparent 50%),
+        radial-gradient(ellipse 800px 600px at 100% 100%, rgba(168, 85, 247, 0.1), transparent 50%),
+        radial-gradient(ellipse 600px 400px at 50% 50%, rgba(99, 102, 241, 0.05), transparent 50%),
+        var(--bg-0);
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
+    -webkit-font-smoothing: antialiased;
+}
+header {
+    background: rgba(13, 18, 32, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    padding: 14px 24px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 14px;
+    position: relative;
+    z-index: 5;
+}
+header::after {
+    content: '';
+    position: absolute;
+    bottom: -1px; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--primary), var(--accent), transparent);
+    opacity: 0.6;
+}
+h1 {
+    font-size: 1.15rem; font-weight: 700;
+    display: flex; align-items: center; gap: 10px; letter-spacing: -0.02em;
+}
+.logo-badge {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 34px; height: 34px;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    border-radius: 10px; font-size: 1.1rem;
+    box-shadow: 0 0 20px var(--primary-glow), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+.logo-text {
+    background: linear-gradient(135deg, #ffffff, #8892a6);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+}
+.lang-selector {
+    display: flex; gap: 6px; flex-wrap: wrap;
+    background: rgba(7, 11, 20, 0.6); padding: 4px;
+    border-radius: 30px; border: 1px solid var(--border);
+}
+.lang-btn {
+    padding: 7px 16px; border: 1px solid transparent; border-radius: 20px;
+    background: transparent; color: var(--text-dim); cursor: pointer;
+    font-size: 0.88rem; font-weight: 500; font-family: inherit;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); white-space: nowrap;
+}
+.lang-btn:hover { color: var(--text); background: rgba(100, 140, 255, 0.08); }
+.lang-btn.active {
+    background: linear-gradient(135deg, var(--primary), var(--primary-2));
+    color: #fff; border-color: rgba(0, 212, 255, 0.5);
+    box-shadow: 0 0 20px var(--primary-glow), 0 0 0 1px rgba(0, 212, 255, 0.3), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+.container { display: flex; flex: 1; overflow: hidden; gap: 12px; padding: 12px; }
+.editor-pane, .output-pane {
+    flex: 1; display: flex; flex-direction: column; min-width: 0;
+    background: var(--surface);
+    backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255,255,255,0.03);
+}
+.pane-header {
+    padding: 10px 16px; background: rgba(7, 11, 20, 0.5);
+    border-bottom: 1px solid var(--border);
+    font-size: 0.82rem; font-weight: 500; color: var(--text-dim);
+    display: flex; justify-content: space-between; align-items: center;
+    gap: 8px; letter-spacing: 0.02em; text-transform: uppercase; flex-wrap: wrap;
+}
+.pane-header > span:first-child { display: flex; align-items: center; gap: 8px; }
+.pane-header > span:first-child::before {
+    content: ''; width: 8px; height: 8px; border-radius: 50%;
+    background: var(--primary); box-shadow: 0 0 10px var(--primary-glow);
+}
+.pane-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+#editor-container { flex: 1; height: 100%; width: 100%; min-height: 0; }
+#output { flex: 1; width: 100%; border: none; background: #ffffff; min-height: 0; }
+#console-output {
+    flex: 1; width: 100%; padding: 18px;
+    font-family: 'JetBrains Mono', 'SF Mono', Monaco, monospace;
+    font-size: 0.88rem; background: #0a0e1a; color: #d4d4d4;
+    overflow-y: auto; white-space: pre-wrap; display: none;
+    line-height: 1.6; min-height: 0;
+}
+.run-btn, .secondary-btn, .danger-btn {
+    padding: 7px 14px; border-radius: var(--radius-sm); cursor: pointer;
+    font-weight: 600; font-size: 0.82rem; font-family: inherit;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    letter-spacing: 0.01em; border: 1px solid transparent; white-space: nowrap;
+}
+.run-btn {
+    background: linear-gradient(135deg, var(--success), #16a34a); color: #fff;
+    box-shadow: 0 0 16px var(--success-glow), inset 0 1px 0 rgba(255,255,255,0.15);
+}
+.run-btn:hover:not(:disabled) {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 24px var(--success-glow), inset 0 1px 0 rgba(255,255,255,0.2);
+}
+.run-btn:disabled { opacity: 0.6; cursor: wait; transform: none; }
+.secondary-btn { background: rgba(100, 140, 255, 0.08); color: var(--text); border-color: var(--border); }
+.secondary-btn:hover { background: rgba(100, 140, 255, 0.15); border-color: var(--border-strong); box-shadow: 0 0 16px rgba(0, 212, 255, 0.15); }
+.danger-btn { background: rgba(239, 68, 68, 0.1); color: #fca5a5; border-color: rgba(239, 68, 68, 0.25); }
+.danger-btn:hover { background: rgba(239, 68, 68, 0.2); color: #fecaca; border-color: rgba(239, 68, 68, 0.5); box-shadow: 0 0 16px var(--danger-glow); }
 
-        /* === Paste Area === */
-        #paste-container { display: none; flex: 1; position: relative; background-color: #fafafa; flex-direction: column; }
-        #paste-container.active { display: flex; }
-        #paste-textarea {
-            flex: 1; width: 100%; padding: 16px; border: none; outline: none; resize: none;
-            font-family: "SF Mono", Monaco, monospace; font-size: 14px; line-height: 1.6;
-            background-color: #ffffff; color: #333;
-        }
-        #paste-textarea::placeholder { color: #aaa; }
-        #drop-overlay {
-            display: none; position: absolute; inset: 0;
-            background-color: rgba(0, 123, 255, 0.08);
-            border: 3px dashed #007bff; align-items: center; justify-content: center;
-            font-size: 1.2rem; color: #007bff; font-weight: 600;
-            pointer-events: none; z-index: 10;
-        }
-        #drop-overlay.active { display: flex; }
-        #paste-info {
-            padding: 8px 16px; background-color: #f0f4f8;
-            border-top: 1px solid #e0e0e0; font-size: 0.8rem; color: #555;
-            display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
-        }
-        #detected-lang {
-            padding: 3px 8px; border: 1px solid #d0d0d0; border-radius: 4px;
-            background: #fff; font-size: 0.8rem; font-weight: 600; color: #007bff; cursor: pointer;
-        }
-        .paste-actions { margin-left: auto; display: flex; gap: 8px; }
+/* Library */
+#library-container { display: none; flex: 1; flex-direction: column; background: transparent; overflow: hidden; min-height: 0; }
+#library-container.active { display: flex; }
+.library-toolbar { padding: 12px 16px; background: rgba(7, 11, 20, 0.5); border-bottom: 1px solid var(--border); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+#library-search { flex: 1; min-width: 200px; padding: 9px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.88rem; font-family: inherit; outline: none; background: rgba(7, 11, 20, 0.6); color: var(--text); transition: all 0.2s; }
+#library-search::placeholder { color: var(--text-muted); }
+#library-search:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.15), 0 0 20px rgba(0, 212, 255, 0.1); }
+#library-list { flex: 1; overflow-y: auto; padding: 16px; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; align-content: start; min-height: 0; }
+#library-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 32px; color: var(--text-dim); }
+#library-empty > div:first-child { font-size: 4rem; filter: drop-shadow(0 0 24px var(--primary-glow)); margin-bottom: 16px; }
+#library-empty h3 { margin-bottom: 8px; color: var(--text); font-size: 1.1rem; font-weight: 600; }
+#library-empty p { margin-top: 4px; }
+#library-empty code { background: rgba(0, 212, 255, 0.1); color: var(--primary); padding: 2px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 0.85em; }
+.lib-card { background: linear-gradient(135deg, rgba(20, 26, 46, 0.9), rgba(13, 18, 32, 0.9)); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 14px; display: flex; flex-direction: column; gap: 10px; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden; animation: fadeIn 0.3s ease; }
+.lib-card::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(0, 212, 255, 0.08), transparent 50%, rgba(168, 85, 247, 0.08)); opacity: 0; transition: opacity 0.25s; pointer-events: none; }
+.lib-card:hover { border-color: var(--border-strong); transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4), 0 0 24px rgba(0, 212, 255, 0.1); }
+.lib-card:hover::before { opacity: 1; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.lib-card-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.lib-lang { padding: 3px 9px; border-radius: 12px; font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.6px; border: 1px solid; }
+.lib-lang-html { background: rgba(255, 152, 0, 0.15); color: #ffb74d; border-color: rgba(255, 152, 0, 0.3); }
+.lib-lang-python { background: rgba(34, 197, 94, 0.15); color: #4ade80; border-color: rgba(34, 197, 94, 0.3); }
+.lib-lang-css { background: rgba(59, 130, 246, 0.15); color: #60a5fa; border-color: rgba(59, 130, 246, 0.3); }
+.lib-lang-javascript { background: rgba(234, 179, 8, 0.15); color: #facc15; border-color: rgba(234, 179, 8, 0.3); }
+.lib-lang-unknown { background: rgba(148, 163, 184, 0.15); color: #94a3b8; border-color: rgba(148, 163, 184, 0.3); }
+.lib-date { font-size: 0.73rem; color: var(--text-muted); font-weight: 500; }
+.lib-title { font-weight: 600; font-size: 0.95rem; color: var(--text); word-break: break-word; line-height: 1.3; letter-spacing: -0.01em; }
+.lib-preview { font-family: 'JetBrains Mono', 'SF Mono', Monaco, monospace; font-size: 0.72rem; color: var(--text-dim); background: rgba(7, 11, 20, 0.6); padding: 10px; border-radius: var(--radius-sm); max-height: 84px; overflow: hidden; white-space: pre-wrap; word-break: break-all; line-height: 1.5; border: 1px solid rgba(100, 140, 255, 0.08); }
+.lib-actions { display: flex; gap: 6px; margin-top: auto; }
+.lib-btn { padding: 6px 10px; border: 1px solid var(--border); background: rgba(100, 140, 255, 0.05); border-radius: var(--radius-sm); cursor: pointer; font-size: 0.78rem; color: var(--text-dim); font-family: inherit; transition: all 0.15s; font-weight: 500; }
+.lib-btn:hover { background: rgba(100, 140, 255, 0.15); color: var(--text); border-color: var(--border-strong); }
+.lib-btn-open { background: linear-gradient(135deg, var(--primary), var(--primary-2)); color: #fff; border-color: rgba(0, 212, 255, 0.4); flex: 1; box-shadow: 0 0 12px rgba(0, 212, 255, 0.2); }
+.lib-btn-open:hover { background: linear-gradient(135deg, #00b8e6, #4f46e5); color: #fff; box-shadow: 0 0 20px var(--primary-glow); }
+.lib-btn-del:hover { background: rgba(239, 68, 68, 0.15); color: #fca5a5; border-color: rgba(239, 68, 68, 0.4); }
 
-        /* === Library === */
-        #library-container { display: none; flex: 1; flex-direction: column; background-color: #fafafa; overflow: hidden; }
-        #library-container.active { display: flex; }
-        .library-toolbar {
-            padding: 12px 16px; background: #fff; border-bottom: 1px solid #e0e0e0;
-            display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
-        }
-        #library-search {
-            flex: 1; min-width: 200px; padding: 8px 12px;
-            border: 1px solid #d0d0d0; border-radius: 6px;
-            font-size: 0.9rem; outline: none;
-        }
-        #library-search:focus { border-color: #007bff; }
-        #library-list {
-            flex: 1; overflow-y: auto; padding: 16px;
-            display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 12px; align-content: start;
-        }
-        #library-empty {
-            flex: 1; display: flex; flex-direction: column; align-items: center;
-            justify-content: center; text-align: center; padding: 32px; color: #777;
-        }
-        #library-empty h3 { margin-bottom: 8px; color: #555; }
-        .lib-card {
-            background: #fff; border: 1px solid #e0e0e0; border-radius: 8px;
-            padding: 14px; display: flex; flex-direction: column; gap: 8px;
-            transition: box-shadow 0.2s, transform 0.2s;
-        }
-        .lib-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateY(-1px); }
-        .lib-card-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-        .lib-lang {
-            padding: 2px 8px; border-radius: 12px; font-size: 0.7rem;
-            font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
-        }
-        .lib-lang-html { background: #ffe0b2; color: #e65100; }
-        .lib-lang-python { background: #c8e6c9; color: #2e7d32; }
-        .lib-lang-css { background: #bbdefb; color: #1565c0; }
-        .lib-lang-javascript { background: #fff9c4; color: #f57f17; }
-        .lib-lang-unknown { background: #eeeeee; color: #616161; }
-        .lib-date { font-size: 0.75rem; color: #999; }
-        .lib-title { font-weight: 600; font-size: 0.95rem; color: #333; word-break: break-word; line-height: 1.3; }
-        .lib-preview {
-            font-family: "SF Mono", Monaco, monospace; font-size: 0.75rem; color: #666;
-            background: #f5f5f5; padding: 8px; border-radius: 4px;
-            max-height: 80px; overflow: hidden; white-space: pre-wrap;
-            word-break: break-all; line-height: 1.4;
-        }
-        .lib-actions { display: flex; gap: 6px; margin-top: 4px; }
-        .lib-btn {
-            padding: 5px 10px; border: 1px solid #d0d0d0; background: #fff;
-            border-radius: 4px; cursor: pointer; font-size: 0.8rem; color: #555;
-            transition: all 0.15s;
-        }
-        .lib-btn:hover { background: #f0f0f0; }
-        .lib-btn-open { background: #007bff; color: white; border-color: #007bff; flex: 1; }
-        .lib-btn-open:hover { background: #0056b3; }
-        .lib-btn-del:hover { background: #ffebee; color: #c62828; border-color: #ef9a9a; }
+/* === QR Code === */
+#qr-container { display: none; flex: 1; flex-direction: column; overflow-y: auto; padding: 20px; gap: 18px; min-height: 0; }
+#qr-container.active { display: flex; }
+.qr-section { display: flex; flex-direction: column; gap: 8px; }
+.qr-label { font-size: 0.85rem; color: var(--text-dim); font-weight: 500; display: flex; align-items: center; gap: 6px; }
+.qr-presets { display: flex; flex-wrap: wrap; gap: 6px; }
+.qr-preset { padding: 6px 12px; background: rgba(100, 140, 255, 0.08); border: 1px solid var(--border); color: var(--text); border-radius: 20px; cursor: pointer; font-size: 0.8rem; font-family: inherit; transition: all 0.15s; font-weight: 500; }
+.qr-preset:hover { background: rgba(0, 212, 255, 0.15); border-color: var(--primary); color: var(--primary); box-shadow: 0 0 16px rgba(0, 212, 255, 0.2); }
+#qr-content { padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: rgba(7, 11, 20, 0.6); color: var(--text); font-family: 'JetBrains Mono', monospace; font-size: 0.88rem; resize: vertical; min-height: 100px; outline: none; transition: all 0.2s; width: 100%; }
+#qr-content:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.15); }
+#qr-size { width: 100%; accent-color: var(--primary); }
+.qr-row-2 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+.qr-field { display: flex; flex-direction: column; gap: 6px; }
+.qr-field input[type="color"] { width: 100%; height: 42px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: rgba(7, 11, 20, 0.6); cursor: pointer; padding: 4px; }
+.qr-field select { padding: 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: rgba(7, 11, 20, 0.6); color: var(--text); font-family: inherit; font-size: 0.88rem; cursor: pointer; outline: none; }
+.qr-field select:focus { border-color: var(--primary); }
+.qr-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+#qr-output { flex: 1; display: none; align-items: center; justify-content: center; padding: 24px; overflow: auto; min-height: 0; background: rgba(7, 11, 20, 0.4); }
+#qr-output.active { display: flex; flex-direction: column; gap: 16px; }
+#qr-canvas-wrap {
+    background: #ffffff; padding: 16px; border-radius: 14px;
+    box-shadow: 0 0 60px rgba(0, 212, 255, 0.35), 0 8px 32px rgba(0, 0, 0, 0.4);
+    display: flex; align-items: center; justify-content: center;
+    min-width: 100px; min-height: 100px;
+    position: relative;
+    animation: qrPulse 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+@keyframes qrPulse {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+#qr-canvas-wrap canvas, #qr-canvas-wrap img { display: block; max-width: 100%; height: auto; }
+#qr-canvas-wrap .qr-placeholder { color: #999; padding: 40px; font-size: 0.9rem; text-align: center; }
+@media (max-width: 600px) {
+    .qr-row-2 { grid-template-columns: 1fr; }
+}
 
-        /* === Modal === */
-        #modal-overlay {
-            display: none; position: fixed; inset: 0;
-            background: rgba(0,0,0,0.4); z-index: 1000;
-            align-items: center; justify-content: center;
-        }
-        .modal {
-            background: #fff; border-radius: 10px; padding: 24px;
-            min-width: 360px; max-width: 90vw;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            display: flex; flex-direction: column; gap: 16px;
-        }
-        .modal h3 { font-size: 1.1rem; color: #333; }
-        #modal-input {
-            padding: 10px 12px; border: 1px solid #d0d0d0; border-radius: 6px;
-            font-size: 0.95rem; outline: none; width: 100%;
-        }
-        #modal-input:focus { border-color: #007bff; }
-        .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
-        .modal-actions button {
-            padding: 8px 18px; border-radius: 6px; border: 1px solid #d0d0d0;
-            background: #fff; cursor: pointer; font-size: 0.9rem;
-        }
-        #modal-confirm { background: #007bff; color: white; border-color: #007bff; }
-        #modal-confirm:hover { background: #0056b3; }
-    </style>
+/* Modal */
+#modal-overlay { display: none; position: fixed; inset: 0; background: rgba(7, 11, 20, 0.7); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); z-index: 1000; align-items: center; justify-content: center; animation: fadeIn 0.15s ease; }
+.modal { background: linear-gradient(135deg, #141a2e, #0d1220); border: 1px solid var(--border-strong); border-radius: var(--radius-lg); padding: 24px; min-width: 360px; max-width: 90vw; box-shadow: 0 24px 80px rgba(0, 0, 0, 0.6), 0 0 60px rgba(0, 212, 255, 0.15), inset 0 1px 0 rgba(255,255,255,0.05); display: flex; flex-direction: column; gap: 16px; animation: modalIn 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+@keyframes modalIn { from { opacity: 0; transform: scale(0.95) translateY(10px); } to { opacity: 1; transform: scale(1) translateY(0); } }
+.modal h3 { font-size: 1.1rem; color: var(--text); font-weight: 600; letter-spacing: -0.01em; }
+#modal-input { padding: 11px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 0.92rem; font-family: inherit; outline: none; width: 100%; background: rgba(7, 11, 20, 0.6); color: var(--text); transition: all 0.2s; }
+#modal-input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(0, 212, 255, 0.15); }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+.modal-actions button { padding: 9px 18px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: rgba(100, 140, 255, 0.08); color: var(--text); cursor: pointer; font-size: 0.88rem; font-family: inherit; font-weight: 500; transition: all 0.15s; }
+.modal-actions button:hover { background: rgba(100, 140, 255, 0.15); }
+#modal-confirm { background: linear-gradient(135deg, var(--primary), var(--primary-2)); color: #fff; border-color: rgba(0, 212, 255, 0.4); box-shadow: 0 0 16px var(--primary-glow); }
+#modal-confirm:hover { background: linear-gradient(135deg, #00b8e6, #4f46e5); box-shadow: 0 0 24px var(--primary-glow); }
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(100, 140, 255, 0.2); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(0, 212, 255, 0.4); }
+</style>
 </head>
 <body>
-    <header>
-        <h1>⚡ Meu Laboratório de Código</h1>
-        <div class="lang-selector">
-            <button class="lang-btn active" data-lang="html">HTML</button>
-            <button class="lang-btn" data-lang="python">Python</button>
-            <button class="lang-btn" data-lang="paste">📋 Colar Código</button>
-            <button class="lang-btn" data-lang="library">💾 Salvos</button>
+<header>
+    <h1>
+        <span class="logo-badge">🧪</span>
+        <span class="logo-text">⚡ Meu Laboratório de Código ⚡</span>
+    </h1>
+    <div class="lang-selector">
+        <button class="lang-btn active" data-lang="html">HTML</button>
+        <button class="lang-btn" data-lang="python">Python</button>
+        <button class="lang-btn" data-lang="qr">📱 QR Code</button>
+        <button class="lang-btn" data-lang="library">💾 Salvos</button>
+    </div>
+</header>
+<div class="container">
+    <div class="editor-pane">
+        <div class="pane-header">
+            <span id="pane-title">Código</span>
+            <div class="pane-actions">
+                <button class="secondary-btn" id="format-btn" style="display:none;" title="Formatar código (Ctrl+Shift+F)">✨ Formatar</button>
+                <button class="secondary-btn" id="minify-btn" style="display:none;" title="Minificar código (deixar menor)">📦 Minificar</button>
+                <button class="secondary-btn" id="save-btn" style="display:none;">💾 Salvar</button>
+                <button class="run-btn" id="run-btn" style="display:none;">▶ Executar</button>
+                <button class="danger-btn" id="delete-btn" style="display:none;">🗑️ Apagar</button>
+            </div>
         </div>
-    </header>
-    <div class="container">
-        <div class="editor-pane">
-            <div class="pane-header">
-                <span id="pane-title">Código</span>
-                <div style="display: flex; gap: 6px;">
-                    <button class="secondary-btn" id="save-btn" style="display:none;">💾 Salvar</button>
-                    <button class="run-btn" id="run-btn">Executar</button>
+        <div id="editor-container"></div>
+        
+        <div id="qr-container">
+            <div class="qr-section">
+                <label class="qr-label">⚡ Atalhos rápidos</label>
+                <div class="qr-presets">
+                    <button class="qr-preset" data-preset="url">🔗 URL</button>
+                    <button class="qr-preset" data-preset="email">📧 Email</button>
+                    <button class="qr-preset" data-preset="phone">📱 Telefone</button>
+                    <button class="qr-preset" data-preset="sms">💬 SMS</button>
+                    <button class="qr-preset" data-preset="wifi">📶 WiFi</button>
+                    <button class="qr-preset" data-preset="vcard">👤 vCard</button>
+                    <button class="qr-preset" data-preset="geo">📍 Localização</button>
                 </div>
             </div>
-            <div id="editor-container"></div>
-            <div id="paste-container">
-                <div id="drop-overlay">📁 Solte os arquivos aqui</div>
-                <textarea id="paste-textarea" placeholder="📋 Cole seu código aqui (HTML, Python, CSS, JS...)&#10;&#10;📁 Ou arraste arquivos para cá (aceita múltiplos: .html + .css + .js)&#10;📂 Ou use 'Carregar Arquivo' para escolher do seu computador"></textarea>
-                <div id="paste-info">
-                    <span>Detectado:</span>
-                    <select id="detected-lang">
-                        <option value="unknown">— Auto —</option>
-                        <option value="html">HTML</option>
-                        <option value="css">CSS</option>
-                        <option value="javascript">JavaScript</option>
-                        <option value="python">Python</option>
+            
+            <div class="qr-section">
+                <label class="qr-label" for="qr-content">📝 Conteúdo do QR Code</label>
+                <textarea id="qr-content" placeholder="Digite texto, URL, etc...">https://exemplo.com</textarea>
+            </div>
+            
+            <div class="qr-section">
+                <label class="qr-label">📐 Tamanho: <span id="qr-size-val" style="color: var(--primary); font-weight: 700;">256px</span></label>
+                <input type="range" id="qr-size" min="128" max="512" value="256" step="32">
+            </div>
+            
+            <div class="qr-section qr-row-2">
+                <div class="qr-field">
+                    <label class="qr-label">🎨 Cor</label>
+                    <input type="color" id="qr-color" value="#000000">
+                </div>
+                <div class="qr-field">
+                    <label class="qr-label">🖼️ Fundo</label>
+                    <input type="color" id="qr-bg" value="#ffffff">
+                </div>
+                <div class="qr-field">
+                    <label class="qr-label">🛡️ Correção</label>
+                    <select id="qr-ecc">
+                        <option value="L">L (7%)</option>
+                        <option value="M" selected>M (15%)</option>
+                        <option value="Q">Q (25%)</option>
+                        <option value="H">H (30%)</option>
                     </select>
-                    <span id="paste-stats">0 caracteres · 0 linhas</span>
-                    <div class="paste-actions">
-                        <button class="secondary-btn" id="paste-upload-btn">📂 Carregar Arquivo</button>
-                        <button class="secondary-btn" id="paste-clear-btn">🗑️ Limpar</button>
-                        <button class="run-btn" id="paste-test-btn">▶ Testar</button>
-                    </div>
-                </div>
-                <input type="file" id="file-input" style="display:none;" multiple accept=".html,.htm,.css,.js,.jsx,.ts,.tsx,.py,.json,.txt,.md,.xml,.svg,.sql,.sh,.yaml,.yml">
-            </div>
-            <div id="library-container">
-                <div class="library-toolbar">
-                    <input type="text" id="library-search" placeholder="🔍 Buscar por título ou conteúdo...">
-                    <button class="secondary-btn" id="library-export-btn">⬇️ Exportar</button>
-                    <button class="secondary-btn" id="library-import-btn">⬆️ Importar</button>
-                    <input type="file" id="library-import-input" accept=".json" style="display:none;">
-                </div>
-                <div id="library-list"></div>
-                <div id="library-empty">
-                    <div style="font-size: 3rem;">📭</div>
-                    <h3>Nenhum código salvo ainda</h3>
-                    <p>Use o botão <strong>💾 Salvar</strong> nas abas HTML, Python ou Colar Código para guardar aqui.</p>
-                    <p style="font-size: 0.85rem; color: #999; margin-top: 12px;">Os códigos ficam no seu navegador (localStorage) e sobrevivem a recarregamentos.</p>
                 </div>
             </div>
+            
+            <div class="qr-section qr-actions">
+                <button class="run-btn" id="qr-download">⬇️ Baixar PNG</button>
+                <button class="secondary-btn" id="qr-copy">📋 Copiar</button>
+                <button class="danger-btn" id="qr-clear">🗑️ Limpar</button>
+            </div>
         </div>
-        <div class="output-pane">
-            <div class="pane-header"><span>Resultado</span></div>
-            <iframe id="output"></iframe>
-            <div id="console-output"></div>
-        </div>
-    </div>
-
-    <!-- Modal -->
-    <div id="modal-overlay">
-        <div class="modal">
-            <h3 id="modal-title">Salvar código</h3>
-            <input type="text" id="modal-input" placeholder="Nome do código...">
-            <div class="modal-actions">
-                <button id="modal-cancel">Cancelar</button>
-                <button id="modal-confirm">Salvar</button>
+        
+        <div id="library-container">
+            <div class="library-toolbar">
+                <input type="text" id="library-search" placeholder="🔍 Buscar por título ou conteúdo...">
+                <button class="secondary-btn" id="library-export-btn">⬇️ Exportar</button>
+                <button class="secondary-btn" id="library-import-btn">⬆️ Importar</button>
+                <input type="file" id="library-import-input" accept=".json" style="display:none;">
+            </div>
+            <div id="library-list"></div>
+            <div id="library-empty">
+                <div>📭</div>
+                <h3>Nenhum código salvo ainda</h3>
+                <p>Use o botão <strong>💾 Salvar</strong> nas abas HTML ou Python.</p>
+                <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 12px;">Os dados ficam no <code>localStorage</code> do navegador. Use <strong>⬇️ Exportar</strong> para gerar backup.</p>
             </div>
         </div>
     </div>
+    <div class="output-pane">
+        <div class="pane-header"><span id="output-title">Resultado</span></div>
+        <iframe id="output"></iframe>
+        <div id="console-output"></div>
+        <div id="qr-output">
+            <div id="qr-canvas-wrap">
+                <div class="qr-placeholder">QR Code aparecerá aqui</div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="modal-overlay">
+    <div class="modal">
+        <h3 id="modal-title">Salvar código</h3>
+        <input type="text" id="modal-input" placeholder="Nome...">
+        <div class="modal-actions">
+            <button id="modal-cancel">Cancelar</button>
+            <button id="modal-confirm">Salvar</button>
+        </div>
+    </div>
+</div>
 
-    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/loader.js"></script>
-    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
-    <script>
-        let editor;
-        let pyodide;
-        let currentLang = 'html';
-        let detectedLang = 'unknown';
+<script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/loader.js"></script>
+<script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.15.1/beautify.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.15.1/beautify-css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.15.1/beautify-html.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+let editor, pyodide;
+let currentLang = 'html';
 
-        const samples = {
-            html: `<!DOCTYPE html>
-<html>
-<head>
-  <style>
-    body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f0f4f8; }
-    .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; }
-    h2 { color: #007bff; margin-top: 0; }
-  </style>
-</head>
-<body>
-  <div class="card">
-    <h2>Olá, Mundo!</h2>
-    <p>Este é um preview em tempo real.</p>
-    <button onclick="alert('Funciona!')">Clique aqui</button>
-  </div>
-</body>
-</html>`,
-            python: `# Execute seu código Python aqui
-import sys
+const samples = {
+    html: `<!DOCTYPE html>
+<html><head><style>
+body { font-family: 'Inter', sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: linear-gradient(135deg, #0a0e1a, #141a2e); color: #e4e7eb; }
+.card { background: rgba(20, 26, 46, 0.8); padding: 2rem; border-radius: 16px; border: 1px solid rgba(0, 212, 255, 0.3); box-shadow: 0 0 40px rgba(0, 212, 255, 0.2); text-align: center; }
+h2 { background: linear-gradient(135deg, #00d4ff, #a855f7); -webkit-background-clip: text; -webkit-text-fill-color: transparent; margin-top: 0; }
+button { background: linear-gradient(135deg, #00d4ff, #6366f1); color: white; border: none; padding: 10px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+</style></head><body><div class="card"><h2>Olá, Mundo!</h2><p>Preview em tempo real.</p><button onclick="alert('Funciona!')">Clique</button></div></body></html>`,
+    python: `import sys\ndef greet(name):\n    return f"Olá, {name}!"\nprint(greet("Desenvolvedor"))\nprint(f"Python: {sys.version}")`
+};
+const savedContent = { html: samples.html, python: samples.python };
 
-def greet(name):
-    return f"Olá, {name}!"
+function uuid() { return crypto.randomUUID ? crypto.randomUUID() : 'id-'+Date.now()+'-'+Math.random().toString(36).slice(2,10); }
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function formatDate(ts) {
+    const d = Date.now() - ts;
+    if (d < 60000) return 'agora';
+    if (d < 3600000) return Math.floor(d/60000)+'min atrás';
+    if (d < 86400000) return Math.floor(d/3600000)+'h atrás';
+    return new Date(ts).toLocaleDateString('pt-BR')+' '+new Date(ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+}
 
-print(greet("Desenvolvedor"))
-print(f"Versão do Python: {sys.version}")
-`
-        };
+const STORAGE_KEY = 'lab_code_saved_v1';
+let savedItems = (() => { try { return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]'); } catch(e){ return []; } })();
+function persistSaved(items) {
+    try {
+        const json = JSON.stringify(items);
+        if (json.length > 4*1024*1024 && !confirm(`⚠️ Seus códigos ocupam ${(json.length/1024/1024).toFixed(1)}MB. Continuar?`)) return false;
+        localStorage.setItem(STORAGE_KEY, json); return true;
+    } catch(e) { alert('Erro ao salvar: '+e.message); return false; }
+}
+function updateSavedBadge() {
+    const btn = document.querySelector('.lang-btn[data-lang="library"]');
+    if (btn) btn.textContent = savedItems.length ? `💾 Salvos (${savedItems.length})` : '💾 Salvos';
+}
 
-        const savedContent = { html: samples.html, python: samples.python };
+let modalResolve = null;
+function showModal(title, def='', placeholder='') {
+    return new Promise(resolve => {
+        modalResolve = resolve;
+        document.getElementById('modal-title').textContent = title;
+        const inp = document.getElementById('modal-input');
+        inp.value = def; inp.placeholder = placeholder;
+        document.getElementById('modal-overlay').style.display = 'flex';
+        setTimeout(() => { inp.focus(); inp.select(); }, 50);
+    });
+}
+document.getElementById('modal-cancel').onclick = () => { document.getElementById('modal-overlay').style.display = 'none'; if (modalResolve) modalResolve(null); modalResolve = null; };
+document.getElementById('modal-confirm').onclick = () => { const v = document.getElementById('modal-input').value.trim(); document.getElementById('modal-overlay').style.display = 'none'; if (modalResolve) modalResolve(v); modalResolve = null; };
+document.getElementById('modal-input').onkeydown = (e) => { if (e.key === 'Enter') document.getElementById('modal-confirm').click(); if (e.key === 'Escape') document.getElementById('modal-cancel').click(); };
 
-        // === Utilidades ===
-        function uuid() {
-            if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
-            return 'id-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10);
-        }
-        function escapeHtml(str) {
-            return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-        }
-        function formatDate(ts) {
-            const diff = Date.now() - ts;
-            if (diff < 60000) return 'agora';
-            if (diff < 3600000) return Math.floor(diff/60000) + 'min atrás';
-            if (diff < 86400000) return Math.floor(diff/3600000) + 'h atrás';
-            return new Date(ts).toLocaleDateString('pt-BR') + ' ' + new Date(ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-        }
+async function saveCurrentCode(lang, code) {
+    if (!code || !code.trim()) { alert('Nada para salvar.'); return; }
+    const def = `Meu ${lang} - ${new Date().toLocaleDateString('pt-BR')}`;
+    const title = await showModal('💾 Salvar código', def, 'Nome do código...');
+    if (title === null) return;
+    savedItems.push({ id: uuid(), title: title || 'Sem título', lang, code, createdAt: Date.now(), updatedAt: Date.now() });
+    if (persistSaved(savedItems)) { updateSavedBadge(); renderLibrary(document.getElementById('library-search').value); }
+}
+document.getElementById('save-btn').onclick = () => {
+    if (currentLang === 'html' || currentLang === 'python') saveCurrentCode(currentLang, editor.getValue());
+};
 
-        // === === === STORAGE === === ===
-        const STORAGE_KEY = 'lab_code_saved_v1';
-        let savedItems = (() => {
-            try {
-                const raw = localStorage.getItem(STORAGE_KEY);
-                return raw ? JSON.parse(raw) : [];
-            } catch (e) { return []; }
-        })();
+document.getElementById('delete-btn').onclick = () => {
+    if (currentLang !== 'html' && currentLang !== 'python') return;
+    if (!editor.getValue().trim()) { alert('O editor já está vazio.'); return; }
+    if (!confirm('🗑️ Apagar todo o código do editor?\n\nEsta ação não pode ser desfeita.')) return;
+    editor.setValue('');
+    savedContent[currentLang] = '';
+    if (currentLang === 'html') updateHtmlPreview();
+};
 
-        function persistSaved(items) {
-            try {
-                const json = JSON.stringify(items);
-                if (json.length > 4 * 1024 * 1024) {
-                    if (!confirm(`⚠️ Seus códigos ocupam ${(json.length/1024/1024).toFixed(1)}MB. Isso pode encher o armazenamento do navegador. Continuar?`)) return false;
-                }
-                localStorage.setItem(STORAGE_KEY, json);
-                return true;
-            } catch (e) {
-                alert('Erro ao salvar: ' + e.message + '\n\nO armazenamento pode estar cheio. Exclua ou exporte alguns códigos.');
-                return false;
+document.getElementById('run-btn').onclick = async () => {
+    if (currentLang === 'html') {
+        updateHtmlPreview();
+        const btn = document.getElementById('run-btn');
+        const orig = btn.textContent;
+        btn.textContent = '✓ Atualizado'; btn.disabled = true;
+        setTimeout(() => { btn.textContent = orig; btn.disabled = false; }, 900);
+        return;
+    }
+    if (currentLang !== 'python') return;
+    const btn = document.getElementById('run-btn');
+    const con = document.getElementById('console-output');
+    btn.disabled = true; btn.textContent = 'Carregando...';
+    con.textContent = '// Inicializando ambiente Python (pode levar alguns segundos na primeira vez)...';
+    try {
+        await ensurePyodide(con);
+        con.textContent = '// Executando...\n\n';
+        await pyodide.runPythonAsync(editor.getValue());
+        if (con.textContent === '// Executando...\n\n') con.textContent += '// (Nenhuma saída no console)';
+    } catch(e) { con.textContent += '\nERRO NA EXECUÇÃO:\n' + e; }
+    finally { btn.disabled = false; btn.textContent = '▶ Executar'; }
+};
+async function ensurePyodide(con) {
+    if (pyodide) return;
+    pyodide = await loadPyodide({
+        stdout: (t) => { con.textContent += t + '\n'; },
+        stderr: (t) => { con.textContent += 'ERRO: ' + t + '\n'; }
+    });
+    con.textContent = '';
+}
+
+function applyEditorChange(newText) {
+    const model = editor.getModel();
+    const fullRange = model.getFullModelRange();
+    editor.pushUndoStop();
+    editor.executeEdits('format', [{ range: fullRange, text: newText, forceMoveMarkers: true }]);
+    editor.pushUndoStop();
+    savedContent[currentLang] = editor.getValue();
+    if (currentLang === 'html') updateHtmlPreview();
+}
+function flashBtn(id, label) {
+    const b = document.getElementById(id);
+    const orig = b.dataset.orig || b.textContent;
+    b.dataset.orig = orig;
+    b.textContent = label;
+    b.disabled = true;
+    setTimeout(() => { b.textContent = orig; b.disabled = false; }, 900);
+}
+function formatHtmlCode(code) {
+    return html_beautify(code, { indent_size: 2, indent_char: ' ', wrap_line_length: 0, preserve_newlines: true, max_preserve_newlines: 2, indent_inner_html: true, end_with_newline: true, extra_liners: [] });
+}
+function formatPythonCode(code) {
+    const rawLines = code.split('\n').map(l => l.replace(/[ \t]+$/, ''));
+    const out = []; let blanks = 0;
+    for (const line of rawLines) {
+        if (!line.trim()) { blanks++; if (blanks <= 2) out.push(''); continue; }
+        blanks = 0;
+        const leading = line.match(/^[ \t]*/)[0];
+        const spaces = leading.replace(/\t/g, '    ').length;
+        const levels = Math.round(spaces / 4);
+        out.push('    '.repeat(levels) + line.trimStart());
+    }
+    while (out.length && !out[0].trim()) out.shift();
+    while (out.length && out[out.length-1].trim() === '') out.pop();
+    return out.join('\n') + '\n';
+}
+document.getElementById('format-btn').onclick = () => {
+    try {
+        const code = editor.getValue();
+        if (!code.trim()) { alert('Nada para formatar.'); return; }
+        let formatted;
+        if (currentLang === 'html') formatted = formatHtmlCode(code);
+        else if (currentLang === 'python') formatted = formatPythonCode(code);
+        else return;
+        if (formatted === code) { flashBtn('format-btn', '✓ Já formatado'); return; }
+        applyEditorChange(formatted);
+        flashBtn('format-btn', '✓ Formatado');
+    } catch(e) { alert('Erro ao formatar: ' + e.message); }
+};
+
+function minifyHtmlCode(code) {
+    const placeholders = [];
+    let p = code.replace(/<(pre|textarea|script|style)\b[^>]*>[\s\S]*?<\/\1>/gi, (match) => {
+        placeholders.push(match); return `__PROTECTED_${placeholders.length - 1}__`;
+    });
+    p = p.replace(/<!--(?!\[if)[\s\S]*?-->/g, '');
+    p = p.replace(/>\s+</g, '><');
+    p = p.replace(/[ \t]+/g, ' ');
+    p = p.replace(/\s*\n\s*/g, ' ').trim();
+    return p.replace(/__PROTECTED_(\d+)__/g, (_, i) => placeholders[parseInt(i)]);
+}
+function minifyPythonCode(code) {
+    const lines = code.split('\n'); const out = [];
+    let inTriple = false, tripleChar = '';
+    for (const line of lines) {
+        const trimmed = line.trim();
+        const m = trimmed.match(/"""|'''/g);
+        if (m) {
+            if (m.length === 1) {
+                if (!inTriple) { inTriple = true; tripleChar = m[0]; }
+                else if (m[0] === tripleChar) inTriple = false;
             }
         }
-
-        function updateSavedBadge() {
-            const btn = document.querySelector('.lang-btn[data-lang="library"]');
-            if (btn) btn.textContent = savedItems.length ? `💾 Salvos (${savedItems.length})` : '💾 Salvos';
+        if (!inTriple) {
+            if (!trimmed) continue;
+            if (trimmed.startsWith('#') && !trimmed.includes('coding')) continue;
         }
+        out.push(line.replace(/[ \t]+$/, ''));
+    }
+    return out.join('\n') + '\n';
+}
+document.getElementById('minify-btn').onclick = () => {
+    try {
+        const code = editor.getValue();
+        if (!code.trim()) { alert('Nada para minificar.'); return; }
+        let minified;
+        if (currentLang === 'html') minified = minifyHtmlCode(code);
+        else if (currentLang === 'python') minified = minifyPythonCode(code);
+        else return;
+        const before = code.length, after = minified.length;
+        const pct = before > 0 ? Math.round((1 - after / before) * 100) : 0;
+        if (after === before) { flashBtn('minify-btn', '✓ Já compacto'); return; }
+        applyEditorChange(minified);
+        flashBtn('minify-btn', `✓ -${pct}%`);
+    } catch(e) { alert('Erro ao minificar: ' + e.message); }
+};
 
-        // === === === MODAL === === ===
-        let modalResolve = null;
-        function showModal(title, defaultValue = '', placeholder = '') {
-            return new Promise(resolve => {
-                modalResolve = resolve;
-                document.getElementById('modal-title').textContent = title;
-                const input = document.getElementById('modal-input');
-                input.value = defaultValue;
-                input.placeholder = placeholder;
-                document.getElementById('modal-overlay').style.display = 'flex';
-                setTimeout(() => { input.focus(); input.select(); }, 50);
-            });
-        }
-        document.getElementById('modal-cancel').onclick = () => {
-            document.getElementById('modal-overlay').style.display = 'none';
-            if (modalResolve) modalResolve(null);
-            modalResolve = null;
-        };
-        document.getElementById('modal-confirm').onclick = () => {
-            const val = document.getElementById('modal-input').value.trim();
-            document.getElementById('modal-overlay').style.display = 'none';
-            if (modalResolve) modalResolve(val);
-            modalResolve = null;
-        };
-        document.getElementById('modal-input').onkeydown = (e) => {
-            if (e.key === 'Enter') document.getElementById('modal-confirm').click();
-            if (e.key === 'Escape') document.getElementById('modal-cancel').click();
-        };
+document.addEventListener('keydown', (e) => {
+    if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'f') {
+        e.preventDefault();
+        if (currentLang === 'html' || currentLang === 'python') document.getElementById('format-btn').click();
+    }
+});
 
-        // === === === SAVE / LIBRARY === === ===
-        async function saveCurrentCode(lang, code) {
-            if (!code || !code.trim()) { alert('Nada para salvar.'); return; }
-            const def = `Meu ${lang} - ${new Date().toLocaleDateString('pt-BR')}`;
-            const title = await showModal('💾 Salvar código', def, 'Nome do código...');
-            if (title === null) return;
-            const item = {
-                id: uuid(),
-                title: title || 'Sem título',
-                lang: lang,
-                code: code,
-                createdAt: Date.now(),
-                updatedAt: Date.now()
-            };
-            savedItems.push(item);
-            if (persistSaved(savedItems)) {
-                updateSavedBadge();
-                renderLibrary();
-            }
-        }
+// === === === QR CODE === === ===
+const qrPresets = {
+    url: 'https://exemplo.com',
+    email: 'mailto:contato@exemplo.com?subject=Assunto&body=Olá!',
+    phone: 'tel:+5511999999999',
+    sms: 'sms:+5511999999999?body=Olá, tudo bem?',
+    wifi: 'WIFI:T:WPA;S:NomeDaRede;P:senha123;;',
+    vcard: `BEGIN:VCARD
+VERSION:3.0
+N:Silva;João
+FN:João Silva
+ORG:Empresa LTDA
+TEL:+5511999999999
+EMAIL:joao@exemplo.com
+URL:https://exemplo.com
+END:VCARD`,
+    geo: 'geo:-23.5505,-46.6333'
+};
 
-        document.getElementById('save-btn').onclick = () => {
-            if (currentLang === 'paste') {
-                const lang = detectedSelect.value !== 'unknown' ? detectedSelect.value : (detectedLang !== 'unknown' ? detectedLang : 'html');
-                saveCurrentCode(lang, pasteTextarea.value);
-            } else if (currentLang === 'html' || currentLang === 'python') {
-                saveCurrentCode(currentLang, editor.getValue());
-            }
-        };
+function generateQR() {
+    const wrap = document.getElementById('qr-canvas-wrap');
+    wrap.innerHTML = '';
+    
+    const content = document.getElementById('qr-content').value;
+    if (!content || !content.trim()) {
+        wrap.innerHTML = '<div class="qr-placeholder">📝 Digite algum conteúdo ao lado</div>';
+        return;
+    }
+    
+    if (typeof QRCode === 'undefined') {
+        wrap.innerHTML = '<div class="qr-placeholder" style="color:#ef4444;">❌ Biblioteca QR não carregou. Verifique sua conexão.</div>';
+        return;
+    }
+    
+    const size = parseInt(document.getElementById('qr-size').value);
+    const color = document.getElementById('qr-color').value;
+    const bg = document.getElementById('qr-bg').value;
+    const ecc = document.getElementById('qr-ecc').value;
+    
+    try {
+        new QRCode(wrap, {
+            text: content,
+            width: size,
+            height: size,
+            colorDark: color,
+            colorLight: bg,
+            correctLevel: QRCode.CorrectLevel[ecc]
+        });
+    } catch(e) {
+        wrap.innerHTML = '<div class="qr-placeholder" style="color:#ef4444;">❌ ' + escapeHtml(e.message) + '</div>';
+    }
+}
 
-        function renderLibrary(filter = '') {
-            const container = document.getElementById('library-list');
-            const empty = document.getElementById('library-empty');
-            const f = filter.trim().toLowerCase();
-            const filtered = savedItems.filter(item =>
-                !f || item.title.toLowerCase().includes(f) || (item.code || '').toLowerCase().includes(f)
-            ).sort((a,b) => b.updatedAt - a.updatedAt);
-
-            if (filtered.length === 0) {
-                container.innerHTML = '';
-                empty.style.display = 'flex';
-                if (f) {
-                    empty.querySelector('h3').textContent = 'Nenhum resultado para "' + filter + '"';
-                } else {
-                    empty.querySelector('h3').textContent = 'Nenhum código salvo ainda';
-                }
-                return;
-            }
-            empty.style.display = 'none';
-
-            container.innerHTML = filtered.map(item => `
-                <div class="lib-card" data-id="${item.id}">
-                    <div class="lib-card-header">
-                        <span class="lib-lang lib-lang-${escapeHtml(item.lang || 'unknown')}">${escapeHtml(item.lang || '?')}</span>
-                        <span class="lib-date">${formatDate(item.updatedAt)}</span>
-                    </div>
-                    <div class="lib-title">${escapeHtml(item.title)}</div>
-                    <div class="lib-preview">${escapeHtml((item.code || '').substring(0, 200))}</div>
-                    <div class="lib-actions">
-                        <button class="lib-btn lib-btn-open" title="Abrir">📂 Abrir</button>
-                        <button class="lib-btn lib-btn-rename" title="Renomear">✏️</button>
-                        <button class="lib-btn lib-btn-dup" title="Duplicar">📋</button>
-                        <button class="lib-btn lib-btn-del" title="Excluir">🗑️</button>
-                    </div>
-                </div>
-            `).join('');
-
-            container.querySelectorAll('.lib-card').forEach(card => {
-                const id = card.dataset.id;
-                card.querySelector('.lib-btn-open').onclick = () => openSaved(id);
-                card.querySelector('.lib-btn-rename').onclick = () => renameSaved(id);
-                card.querySelector('.lib-btn-dup').onclick = () => duplicateSaved(id);
-                card.querySelector('.lib-btn-del').onclick = () => deleteSaved(id);
-            });
-        }
-
-        function openSaved(id) {
-            const item = savedItems.find(i => i.id === id);
-            if (!item) return;
-
-            if (item.lang === 'html' || item.lang === 'python') {
-                savedContent[item.lang] = item.code;
-                document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-                document.querySelector(`.lang-btn[data-lang="${item.lang}"]`).classList.add('active');
-                switchMode(item.lang);
-                if (item.lang === 'html') updateHtmlPreview();
-            } else {
-                pasteTextarea.value = item.code;
-                const mapped = item.lang === 'css' ? 'css' : (item.lang === 'javascript' ? 'javascript' : 'unknown');
-                detectedSelect.value = mapped;
-                detectedLang = mapped;
-                updatePasteInfo();
-                document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-                document.querySelector(`.lang-btn[data-lang="paste"]`).classList.add('active');
-                switchMode('paste');
-            }
-        }
-
-        async function renameSaved(id) {
-            const item = savedItems.find(i => i.id === id);
-            if (!item) return;
-            const newTitle = await showModal('✏️ Renomear', item.title, 'Novo nome...');
-            if (newTitle === null || !newTitle) return;
-            item.title = newTitle;
-            item.updatedAt = Date.now();
-            if (persistSaved(savedItems)) renderLibrary(document.getElementById('library-search').value);
-        }
-
-        function duplicateSaved(id) {
-            const item = savedItems.find(i => i.id === id);
-            if (!item) return;
-            const copy = { ...item, id: uuid(), title: item.title + ' (cópia)', createdAt: Date.now(), updatedAt: Date.now() };
-            savedItems.push(copy);
-            if (persistSaved(savedItems)) {
-                updateSavedBadge();
-                renderLibrary(document.getElementById('library-search').value);
-            }
-        }
-
-        function deleteSaved(id) {
-            const item = savedItems.find(i => i.id === id);
-            if (!item) return;
-            if (!confirm(`Excluir "${item.title}"?`)) return;
-            savedItems = savedItems.filter(i => i.id !== id);
-            if (persistSaved(savedItems)) {
-                updateSavedBadge();
-                renderLibrary(document.getElementById('library-search').value);
-            }
-        }
-
-        document.getElementById('library-search').addEventListener('input', (e) => renderLibrary(e.target.value));
-
-        // Export / Import
-        document.getElementById('library-export-btn').onclick = () => {
-            if (savedItems.length === 0) { alert('Nada para exportar.'); return; }
-            const blob = new Blob([JSON.stringify(savedItems, null, 2)], {type: 'application/json'});
+function downloadQR() {
+    const canvas = document.querySelector('#qr-canvas-wrap canvas');
+    const img = document.querySelector('#qr-canvas-wrap img');
+    if (!canvas && (!img || !img.src)) { alert('Gere um QR code primeiro.'); return; }
+    
+    if (canvas && canvas.toBlob) {
+        canvas.toBlob((blob) => {
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `lab-codigos-${new Date().toISOString().slice(0,10)}.json`;
+            a.download = `qrcode-${Date.now()}.png`;
             a.click();
-            URL.revokeObjectURL(url);
-        };
-        document.getElementById('library-import-btn').onclick = () => document.getElementById('library-import-input').click();
-        document.getElementById('library-import-input').onchange = async (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-            try {
-                const text = await file.text();
-                const data = JSON.parse(text);
-                if (!Array.isArray(data)) throw new Error('Formato inválido (esperado array).');
-                let added = 0;
-                for (const x of data) {
-                    if (!x || !x.code) continue;
-                    const newItem = {
-                        id: savedItems.find(i => i.id === x.id) ? uuid() : (x.id || uuid()),
-                        title: x.title || 'Sem título',
-                        lang: x.lang || 'html',
-                        code: x.code,
-                        createdAt: x.createdAt || Date.now(),
-                        updatedAt: x.updatedAt || Date.now()
-                    };
-                    savedItems.push(newItem);
-                    added++;
-                }
-                if (persistSaved(savedItems)) {
-                    updateSavedBadge();
-                    renderLibrary();
-                    alert(`✅ ${added} código(s) importado(s).`);
-                }
-            } catch (err) {
-                alert('Erro ao importar: ' + err.message);
-            }
-            e.target.value = '';
-        };
-
-        // === === === MONACO === === ===
-        require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs' }});
-        require(['vs/editor/editor.main'], function() {
-            editor = monaco.editor.create(document.getElementById('editor-container'), {
-                value: samples.html,
-                language: 'html',
-                theme: 'vs',
-                automaticLayout: true,
-                minimap: { enabled: false },
-                fontSize: 14,
-                wordWrap: 'on',
-                scrollBeyondLastLine: false,
-            });
-            editor.onDidChangeModelContent(() => {
-                if (currentLang === 'html') updateHtmlPreview();
-                if (currentLang === 'html' || currentLang === 'python') {
-                    savedContent[currentLang] = editor.getValue();
-                }
-            });
-            updateHtmlPreview();
-        });
-
-        // === === === TABS === === ===
-        document.querySelectorAll('.lang-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                switchMode(btn.dataset.lang);
-            });
-        });
-
-        function switchMode(lang) {
-            // Salva conteúdo do editor antes de trocar (só se estava em html/python)
-            if ((currentLang === 'html' || currentLang === 'python') && editor && editor.getModel()) {
-                savedContent[currentLang] = editor.getValue();
-            }
-            const previousLang = currentLang;
-            currentLang = lang;
-
-            const editorEl = document.getElementById('editor-container');
-            const pasteEl = document.getElementById('paste-container');
-            const libraryEl = document.getElementById('library-container');
-            const iframe = document.getElementById('output');
-            const consoleOut = document.getElementById('console-output');
-            const runBtn = document.getElementById('run-btn');
-            const saveBtn = document.getElementById('save-btn');
-            const paneTitle = document.getElementById('pane-title');
-
-            editorEl.style.display = 'none';
-            pasteEl.classList.remove('active');
-            libraryEl.classList.remove('active');
-
-            if (lang === 'library') {
-                libraryEl.classList.add('active');
-                runBtn.style.display = 'none';
-                saveBtn.style.display = 'none';
-                paneTitle.textContent = 'Códigos Salvos';
-                renderLibrary(document.getElementById('library-search').value);
-                return;
-            }
-
-            if (lang === 'paste') {
-                pasteEl.classList.add('active');
-                runBtn.style.display = 'none';
-                saveBtn.style.display = 'inline-block';
-                paneTitle.textContent = 'Colar Código';
-                return;
-            }
-
-            // html ou python
-            editorEl.style.display = 'block';
-            saveBtn.style.display = 'inline-block';
-            paneTitle.textContent = 'Código';
-
-            if (editor && editor.getModel()) {
-                monaco.editor.setModelLanguage(editor.getModel(), lang === 'html' ? 'html' : 'python');
-                editor.setValue(savedContent[lang] || '');
-            }
-
-            if (lang === 'html') {
-                iframe.style.display = 'block';
-                consoleOut.style.display = 'none';
-                runBtn.style.display = 'none';
-                updateHtmlPreview();
-            } else {
-                iframe.style.display = 'none';
-                consoleOut.style.display = 'block';
-                runBtn.style.display = 'inline-block';
-                if (previousLang !== 'python') {
-                    consoleOut.textContent = '// O resultado da execução do Python aparecerá aqui.\n// Clique em "Executar".';
-                }
-            }
-        }
-
-        function updateHtmlPreview() {
-            document.getElementById('output').srcdoc = editor.getValue();
-        }
-
-        // === === === PYTHON RUN === === ===
-        document.getElementById('run-btn').addEventListener('click', async () => {
-            if (currentLang !== 'python') return;
-            const runBtn = document.getElementById('run-btn');
-            const consoleOut = document.getElementById('console-output');
-            runBtn.disabled = true;
-            runBtn.textContent = 'Carregando...';
-            consoleOut.textContent = '// Inicializando ambiente Python (pode levar alguns segundos na primeira vez)...';
-            try {
-                await ensurePyodide(consoleOut);
-                consoleOut.textContent = '// Executando...\n\n';
-                await pyodide.runPythonAsync(editor.getValue());
-                if (consoleOut.textContent === '// Executando...\n\n') {
-                    consoleOut.textContent += '// (Nenhuma saída no console)';
-                }
-            } catch (error) {
-                consoleOut.textContent += '\nERRO NA EXECUÇÃO:\n' + error;
-            } finally {
-                runBtn.disabled = false;
-                runBtn.textContent = 'Executar';
-            }
-        });
-
-        async function ensurePyodide(consoleOut) {
-            if (pyodide) return;
-            pyodide = await loadPyodide({
-                stdout: (text) => { consoleOut.textContent += text + '\n'; },
-                stderr: (text) => { consoleOut.textContent += 'ERRO: ' + text + '\n'; }
-            });
-            consoleOut.textContent = '';
-        }
-
-        // === === === PASTE MODE === === ===
-        const pasteTextarea = document.getElementById('paste-textarea');
-        const pasteContainer = document.getElementById('paste-container');
-        const dropOverlay = document.getElementById('drop-overlay');
-        const fileInput = document.getElementById('file-input');
-        const detectedSelect = document.getElementById('detected-lang');
-
-        function detectLanguage(code) {
-            const c = code.trim();
-            if (!c) return 'unknown';
-            if (/<!DOCTYPE\s+html|<html[\s>]|<head[\s>]|<body[\s>]/i.test(c)) return 'html';
-            if (/^\s*(def|class)\s+\w+\s*[\(:]|^\s*(import|from)\s+\w+/m.test(c)) return 'python';
-            if (/^\s*print\s*\(/m.test(c) && !/[;{}]/.test(c)) return 'python';
-            if (/<(div|span|p|h[1-6]|a|img|ul|ol|li|table|form|input|button|section|header|footer|nav|main|article)[\s>]/i.test(c)) return 'html';
-            const hasCssProp = /[\w-]+\s*:\s*[^;{}\n]+;/m.test(c);
-            const hasCssSelector = /^[.#]?[\w\s,>+~:()\[\]="'-]+\s*\{/m.test(c);
-            if (hasCssProp && hasCssSelector && !/\bfunction\b|\bconst\b|\blet\b|\bvar\b|\b=>/.test(c)) return 'css';
-            if (/\bfunction\s+\w*\s*\(|\b(const|let|var)\s+\w+|=>\s*[{(]|console\.\w+|document\.\w+/m.test(c)) return 'javascript';
-            if (/\{[^{}]*:[^{}]*\}/.test(c) && !/\/\//.test(c)) return 'css';
-            return 'unknown';
-        }
-
-        function updatePasteInfo() {
-            const code = pasteTextarea.value;
-            const lines = code ? code.split('\n').length : 0;
-            document.getElementById('paste-stats').textContent = `${code.length} caracteres · ${lines} linhas`;
-            if (code.trim()) {
-                detectedLang = detectLanguage(code);
-                detectedSelect.value = detectedLang;
-            } else {
-                detectedLang = 'unknown';
-                detectedSelect.value = 'unknown';
-            }
-        }
-
-        let infoTimer;
-        pasteTextarea.addEventListener('input', () => {
-            clearTimeout(infoTimer);
-            infoTimer = setTimeout(updatePasteInfo, 300);
-        });
-        detectedSelect.addEventListener('change', () => { detectedLang = detectedSelect.value; });
-
-        // Drag & Drop
-        let dragCounter = 0;
-        pasteContainer.addEventListener('dragenter', (e) => {
-            e.preventDefault(); dragCounter++; dropOverlay.classList.add('active');
-        });
-        pasteContainer.addEventListener('dragover', (e) => e.preventDefault());
-        pasteContainer.addEventListener('dragleave', (e) => {
-            e.preventDefault(); dragCounter--;
-            if (dragCounter <= 0) { dropOverlay.classList.remove('active'); dragCounter = 0; }
-        });
-        pasteContainer.addEventListener('drop', async (e) => {
-            e.preventDefault();
-            dropOverlay.classList.remove('active');
-            dragCounter = 0;
-            const files = Array.from(e.dataTransfer.files);
-            if (files.length) await handleFiles(files);
-            else {
-                const text = e.dataTransfer.getData('text/plain');
-                if (text) { pasteTextarea.value = text; updatePasteInfo(); }
-            }
-        });
-
-        document.getElementById('paste-upload-btn').addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', async (e) => {
-            const files = Array.from(e.target.files);
-            if (files.length) await handleFiles(files);
-            fileInput.value = '';
-        });
-
-        async function handleFiles(files) {
-            if (files.length === 1) {
-                const text = await files[0].text();
-                pasteTextarea.value = text;
-                updatePasteInfo();
-                return;
-            }
-            const html = [], css = [], js = [], py = [];
-            for (const file of files) {
-                const text = await file.text();
-                const ext = file.name.split('.').pop().toLowerCase();
-                if (ext === 'html' || ext === 'htm') html.push(text);
-                else if (ext === 'css') css.push(text);
-                else if (ext === 'js') js.push(text);
-                else if (ext === 'py') py.push(`# === ${file.name} ===\n${text}`);
-            }
-            if (py.length) pasteTextarea.value = py.join('\n\n');
-            else if (html.length || css.length || js.length) pasteTextarea.value = combineIntoHtml(html.join('\n'), css.join('\n'), js.join('\n'));
-            updatePasteInfo();
-        }
-
-        function combineIntoHtml(html, css, js) {
-            let result = html.trim() || `<!DOCTYPE html>
-<html>
-<head><meta charset="UTF-8"><title>Teste</title></head>
-<body><h1>Preview</h1></body>
-</html>`;
-            if (css.trim()) {
-                const styleTag = `<style>\n${css}\n</style>`;
-                if (/<\/head>/i.test(result)) result = result.replace(/<\/head>/i, `${styleTag}\n</head>`);
-                else if (/<body[^>]*>/i.test(result)) result = result.replace(/<body[^>]*>/i, (m) => `<head>${styleTag}</head>\n${m}`);
-                else result = `${styleTag}\n${result}`;
-            }
-            if (js.trim()) {
-                const scriptTag = `<script>\n${js}\n<\/script>`;
-                if (/<\/body>/i.test(result)) result = result.replace(/<\/body>/i, `${scriptTag}\n</body>`);
-                else result += `\n${scriptTag}`;
-            }
-            return result;
-        }
-
-        document.getElementById('paste-clear-btn').addEventListener('click', () => {
-            if (pasteTextarea.value && !confirm('Limpar o conteúdo colado?')) return;
-            pasteTextarea.value = '';
-            updatePasteInfo();
-            document.getElementById('output').srcdoc = '';
-            document.getElementById('console-output').textContent = '';
-        });
-
-        document.getElementById('paste-test-btn').addEventListener('click', async () => {
-            const code = pasteTextarea.value.trim();
-            if (!code) { alert('Cole algum código primeiro!'); return; }
-            const chosen = detectedSelect.value !== 'unknown' ? detectedSelect.value : (detectedLang !== 'unknown' ? detectedLang : 'html');
-            const btn = document.getElementById('paste-test-btn');
-            btn.disabled = true;
-            btn.textContent = '⏳ Testando...';
-            try { await runPastedCode(code, chosen); }
-            catch (err) { alert('Erro ao testar: ' + err.message); }
-            finally { btn.disabled = false; btn.textContent = '▶ Testar'; }
-        });
-
-        async function runPastedCode(code, lang) {
-            const iframe = document.getElementById('output');
-            const consoleOut = document.getElementById('console-output');
-            if (lang === 'python') {
-                iframe.style.display = 'none';
-                consoleOut.style.display = 'block';
-                consoleOut.textContent = '// Inicializando Python...';
-                await ensurePyodide(consoleOut);
-                consoleOut.textContent = '// Executando...\n\n';
-                await pyodide.runPythonAsync(code);
-                if (consoleOut.textContent === '// Executando...\n\n') {
-                    consoleOut.textContent += '// (Nenhuma saída no console)';
-                }
-                return;
-            }
-            iframe.style.display = 'block';
-            consoleOut.style.display = 'none';
-            iframe.srcdoc = buildHtmlForTest(code, lang);
-        }
-
-        function buildHtmlForTest(code, lang) {
-            if (lang === 'html') return code;
-            if (lang === 'css') {
-                return `<!DOCTYPE html>
-<html><head><meta charset="UTF-8">
-<style>${code}</style>
-<style>
-body { font-family: -apple-system, sans-serif; padding: 24px; background: #fafafa; color: #333; }
-.demo-note { background: #e3f2fd; padding: 12px 16px; border-radius: 8px; border-left: 4px solid #007bff; margin-bottom: 24px; font-size: 14px; }
-</style>
-</head><body>
-<div class="demo-note">💡 <strong>Preview CSS:</strong> suas regras estão aplicadas ao HTML abaixo. Cole seu próprio HTML na aba HTML para testar com seu conteúdo.</div>
-<h1>Título de Exemplo</h1>
-<p>Este é um parágrafo de exemplo com <a href="#">um link</a>.</p>
-<button>Botão</button>
-<ul><li>Item 1</li><li>Item 2</li></ul>
-<div class="container"><div class="box">Box</div></div>
-</body></html>`;
-            }
-            if (lang === 'javascript') {
-                return `<!DOCTYPE html>
-<html><head><meta charset="UTF-8">
-<style>
-body { font-family: "SF Mono", Monaco, monospace; padding: 24px; background: #1e1e1e; color: #d4d4d4; margin: 0; }
-h3 { color: #4fc3f7; margin: 0 0 12px; }
-#out { background: #252526; padding: 16px; border-radius: 8px; min-height: 100px; white-space: pre-wrap; margin: 0; font-size: 13px; line-height: 1.5; }
-</style>
-</head><body>
-<h3>🖥️ Console de Saída</h3>
-<pre id="out"></pre>
-<script>
-const _out = document.getElementById('out');
-const _origLog = console.log;
-const _fmt = (a) => {
-  if (typeof a === 'object' && a !== null) {
-    try { return JSON.stringify(a, null, 2); } catch(e) { return String(a); }
-  }
-  return String(a);
-};
-console.log = (...args) => { _out.textContent += args.map(_fmt).join(' ') + '\\n'; _origLog.apply(console, args); };
-console.error = (...args) => { _out.textContent += '❌ ' + args.map(_fmt).join(' ') + '\\n'; };
-console.warn = (...args) => { _out.textContent += '⚠️ ' + args.map(_fmt).join(' ') + '\\n'; };
-window.onerror = (msg, src, line) => { _out.textContent += '💥 ERRO (linha ' + line + '): ' + msg + '\\n'; return false; };
-try {
-${code}
-} catch(e) {
-  _out.textContent += '💥 ERRO: ' + e.message + '\\n';
+            setTimeout(() => URL.revokeObjectURL(url), 1000);
+            flashBtn('qr-download', '✓ Baixado');
+        }, 'image/png');
+    } else if (img && img.src) {
+        const a = document.createElement('a');
+        a.href = img.src;
+        a.download = `qrcode-${Date.now()}.png`;
+        a.click();
+        flashBtn('qr-download', '✓ Baixado');
+    }
 }
-<\/script>
-</body></html>`;
-            }
-            return code;
-        }
 
-        // === Inicialização ===
-        updateSavedBadge();
-    </script>
+async function copyQR() {
+    const canvas = document.querySelector('#qr-canvas-wrap canvas');
+    if (!canvas) { alert('Gere um QR code primeiro.'); return; }
+    try {
+        const blob = await new Promise(r => canvas.toBlob(r, 'image/png'));
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        flashBtn('qr-copy', '✓ Copiado');
+    } catch(e) {
+        if (confirm('Não foi possível copiar automaticamente (o navegador exige HTTPS ou localhost).\n\nDeseja baixar a imagem como PNG em vez disso?')) {
+            downloadQR();
+        }
+    }
+}
+
+// Debounce para input de texto
+let qrTimer;
+function debounceQR() {
+    clearTimeout(qrTimer);
+    qrTimer = setTimeout(generateQR, 250);
+}
+
+document.getElementById('qr-content').addEventListener('input', debounceQR);
+document.getElementById('qr-size').addEventListener('input', (e) => {
+    document.getElementById('qr-size-val').textContent = e.target.value + 'px';
+    debounceQR();
+});
+document.getElementById('qr-color').addEventListener('input', debounceQR);
+document.getElementById('qr-bg').addEventListener('input', debounceQR);
+document.getElementById('qr-ecc').addEventListener('change', generateQR);
+
+document.querySelectorAll('.qr-preset').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const key = btn.dataset.preset;
+        if (qrPresets[key]) {
+            document.getElementById('qr-content').value = qrPresets[key];
+            generateQR();
+        }
+    });
+});
+
+document.getElementById('qr-download').onclick = downloadQR;
+document.getElementById('qr-copy').onclick = copyQR;
+document.getElementById('qr-clear').onclick = () => {
+    if (!document.getElementById('qr-content').value.trim()) return;
+    if (!confirm('🗑️ Limpar o conteúdo do QR Code?')) return;
+    document.getElementById('qr-content').value = '';
+    generateQR();
+};
+
+// === Library ===
+function renderLibrary(filter='') {
+    const container = document.getElementById('library-list');
+    const empty = document.getElementById('library-empty');
+    const f = filter.trim().toLowerCase();
+    const filtered = savedItems.filter(i => !f || i.title.toLowerCase().includes(f) || (i.code||'').toLowerCase().includes(f))
+        .sort((a,b) => b.updatedAt - a.updatedAt);
+    if (filtered.length === 0) {
+        container.innerHTML = '';
+        empty.style.display = 'flex';
+        empty.querySelector('h3').textContent = f ? `Nenhum resultado para "${filter}"` : 'Nenhum código salvo ainda';
+        return;
+    }
+    empty.style.display = 'none';
+    container.innerHTML = filtered.map(item => `
+        <div class="lib-card" data-id="${item.id}">
+            <div class="lib-card-header">
+                <span class="lib-lang lib-lang-${escapeHtml(item.lang||'unknown')}">${escapeHtml(item.lang||'?')}</span>
+                <span class="lib-date">${formatDate(item.updatedAt)}</span>
+            </div>
+            <div class="lib-title">${escapeHtml(item.title)}</div>
+            <div class="lib-preview">${escapeHtml((item.code||'').substring(0,200))}</div>
+            <div class="lib-actions">
+                <button class="lib-btn lib-btn-open" data-act="open">📂 Abrir</button>
+                <button class="lib-btn" data-act="rename" title="Renomear">✏️</button>
+                <button class="lib-btn" data-act="dup" title="Duplicar">📋</button>
+                <button class="lib-btn lib-btn-del" data-act="del" title="Excluir">🗑️</button>
+            </div>
+        </div>
+    `).join('');
+    container.querySelectorAll('.lib-card').forEach(card => {
+        const id = card.dataset.id;
+        card.querySelectorAll('[data-act]').forEach(b => {
+            b.onclick = () => {
+                if (b.dataset.act === 'open') openSaved(id);
+                else if (b.dataset.act === 'rename') renameSaved(id);
+                else if (b.dataset.act === 'dup') duplicateSaved(id);
+                else if (b.dataset.act === 'del') deleteSaved(id);
+            };
+        });
+    });
+}
+function openSaved(id) {
+    const item = savedItems.find(i => i.id === id);
+    if (!item) return;
+    if (item.lang === 'html' || item.lang === 'python') {
+        savedContent[item.lang] = item.code;
+        document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector(`.lang-btn[data-lang="${item.lang}"]`).classList.add('active');
+        switchMode(item.lang);
+        if (item.lang === 'html') updateHtmlPreview();
+    } else {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(item.code).then(() => {
+                alert(`📋 Código "${item.title}" copiado para a área de transferência!`);
+            }).catch(() => { alert(`Código "${item.title}" (${item.lang}):\n\n${item.code.substring(0, 1500)}`); });
+        } else { alert(`Código "${item.title}" (${item.lang}):\n\n${item.code.substring(0, 1500)}`); }
+    }
+}
+async function renameSaved(id) {
+    const item = savedItems.find(i => i.id === id);
+    if (!item) return;
+    const n = await showModal('✏️ Renomear', item.title, 'Novo nome...');
+    if (!n) return;
+    item.title = n; item.updatedAt = Date.now();
+    if (persistSaved(savedItems)) renderLibrary(document.getElementById('library-search').value);
+}
+function duplicateSaved(id) {
+    const item = savedItems.find(i => i.id === id);
+    if (!item) return;
+    savedItems.push({ ...item, id: uuid(), title: item.title + ' (cópia)', createdAt: Date.now(), updatedAt: Date.now() });
+    if (persistSaved(savedItems)) { updateSavedBadge(); renderLibrary(document.getElementById('library-search').value); }
+}
+function deleteSaved(id) {
+    const item = savedItems.find(i => i.id === id);
+    if (!item || !confirm(`Excluir "${item.title}"?`)) return;
+    savedItems = savedItems.filter(i => i.id !== id);
+    if (persistSaved(savedItems)) { updateSavedBadge(); renderLibrary(document.getElementById('library-search').value); }
+}
+document.getElementById('library-search').addEventListener('input', (e) => renderLibrary(e.target.value));
+document.getElementById('library-export-btn').onclick = () => {
+    if (!savedItems.length) { alert('Nada para exportar.'); return; }
+    const blob = new Blob([JSON.stringify(savedItems, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `meu-laboratorio-codigos-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+};
+document.getElementById('library-import-btn').onclick = () => document.getElementById('library-import-input').click();
+document.getElementById('library-import-input').onchange = async (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    try {
+        const data = JSON.parse(await file.text());
+        if (!Array.isArray(data)) throw new Error('Formato inválido.');
+        let n = 0;
+        for (const x of data) {
+            if (!x || !x.code) continue;
+            savedItems.push({
+                id: savedItems.find(i => i.id === x.id) ? uuid() : (x.id || uuid()),
+                title: x.title || 'Sem título', lang: x.lang || 'html', code: x.code,
+                createdAt: x.createdAt || Date.now(), updatedAt: x.updatedAt || Date.now()
+            });
+            n++;
+        }
+        if (persistSaved(savedItems)) { updateSavedBadge(); renderLibrary(); alert(`✅ ${n} código(s) importado(s).`); }
+    } catch(err) { alert('Erro: '+err.message); }
+    e.target.value = '';
+};
+
+// === Monaco ===
+require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs' }});
+require(['vs/editor/editor.main'], function() {
+    monaco.editor.defineTheme('tech-dark', {
+        base: 'vs-dark', inherit: true,
+        rules: [
+            { token: 'comment', foreground: '5a6478', fontStyle: 'italic' },
+            { token: 'keyword', foreground: 'a855f7' },
+            { token: 'string', foreground: '22c55e' },
+            { token: 'number', foreground: '00d4ff' },
+            { token: 'tag', foreground: '00d4ff' },
+            { token: 'attribute.name', foreground: 'a855f7' },
+            { token: 'attribute.value', foreground: '22c55e' },
+        ],
+        colors: {
+            'editor.background': '#0d1220', 'editor.foreground': '#e4e7eb',
+            'editorLineNumber.foreground': '#3d4760', 'editorLineNumber.activeForeground': '#00d4ff',
+            'editor.selectionBackground': '#00d4ff33', 'editor.inactiveSelectionBackground': '#00d4ff1a',
+            'editorCursor.foreground': '#00d4ff', 'editor.lineHighlightBackground': '#141a2e',
+            'editorIndentGuide.background': '#1e2540', 'editorIndentGuide.activeBackground': '#00d4ff55',
+            'editorWidget.background': '#141a2e', 'editorWidget.border': '#00d4ff55',
+        }
+    });
+    editor = monaco.editor.create(document.getElementById('editor-container'), {
+        value: samples.html, language: 'html', theme: 'tech-dark',
+        automaticLayout: true, minimap: { enabled: false }, fontSize: 14,
+        fontFamily: "'JetBrains Mono', 'SF Mono', Monaco, monospace",
+        fontLigatures: true, wordWrap: 'on', scrollBeyondLastLine: false,
+        padding: { top: 12, bottom: 12 }, smoothScrolling: true,
+        cursorBlinking: 'smooth', cursorSmoothCaretAnimation: 'on',
+        renderLineHighlight: 'all', roundedSelection: true,
+    });
+    editor.onDidChangeModelContent(() => {
+        if (currentLang === 'html') updateHtmlPreview();
+        if (currentLang === 'html' || currentLang === 'python') savedContent[currentLang] = editor.getValue();
+    });
+    updateHtmlPreview();
+});
+
+document.querySelectorAll('.lang-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        switchMode(btn.dataset.lang);
+    });
+});
+
+function switchMode(lang) {
+    if ((currentLang === 'html' || currentLang === 'python') && editor && editor.getModel()) savedContent[currentLang] = editor.getValue();
+    const prev = currentLang; currentLang = lang;
+    const edEl = document.getElementById('editor-container');
+    const libEl = document.getElementById('library-container');
+    const qrEl = document.getElementById('qr-container');
+    const iframe = document.getElementById('output');
+    const con = document.getElementById('console-output');
+    const qrOut = document.getElementById('qr-output');
+    const saveBtn = document.getElementById('save-btn');
+    const runBtn = document.getElementById('run-btn');
+    const delBtn = document.getElementById('delete-btn');
+    const fmtBtn = document.getElementById('format-btn');
+    const minBtn = document.getElementById('minify-btn');
+    const title = document.getElementById('pane-title');
+    const outputTitle = document.getElementById('output-title');
+
+    // Esconde todos os containers do painel esquerdo
+    edEl.style.display = 'none';
+    libEl.classList.remove('active');
+    qrEl.classList.remove('active');
+
+    // Esconde todos os containers do painel direito
+    iframe.style.display = 'none';
+    con.style.display = 'none';
+    qrOut.classList.remove('active');
+
+    // Esconde todos os botões de ação do editor
+    [saveBtn, runBtn, delBtn, fmtBtn, minBtn].forEach(b => b.style.display = 'none');
+
+    if (lang === 'library') {
+        libEl.classList.add('active');
+        title.textContent = 'Códigos Salvos';
+        outputTitle.textContent = 'Resultado';
+        iframe.style.display = 'block';
+        renderLibrary(document.getElementById('library-search').value);
+        return;
+    }
+
+    if (lang === 'qr') {
+        qrEl.classList.add('active');
+        title.textContent = '📱 Gerador de QR Code';
+        outputTitle.textContent = '📱 QR Code';
+        qrOut.classList.add('active');
+        generateQR();
+        return;
+    }
+
+    // HTML ou Python
+    edEl.style.display = 'block';
+    [saveBtn, runBtn, delBtn, fmtBtn, minBtn].forEach(b => b.style.display = 'inline-block');
+    title.textContent = 'Código';
+    outputTitle.textContent = 'Resultado';
+
+    if (editor && editor.getModel()) {
+        monaco.editor.setModelLanguage(editor.getModel(), lang === 'html' ? 'html' : 'python');
+        editor.setValue(savedContent[lang] || '');
+    }
+    if (lang === 'html') {
+        iframe.style.display = 'block';
+        updateHtmlPreview();
+    } else {
+        con.style.display = 'block';
+        if (prev !== 'python') con.textContent = '// O resultado aparecerá aqui.\n// Clique em ▶ Executar.';
+    }
+}
+
+function updateHtmlPreview() { document.getElementById('output').srcdoc = editor.getValue(); }
+
+updateSavedBadge();
+</script>
 </body>
 </html>
