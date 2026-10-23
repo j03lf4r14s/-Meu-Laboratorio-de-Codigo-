@@ -1,734 +1,893 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor de Testes Local</title>
+    <link rel="stylesheet" data-name="vs/editor/editor.main" href="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/editor/editor.main.min.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f5f5f5;
+            color: #333;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        header {
+            background-color: #ffffff;
+            padding: 12px 24px;
+            border-bottom: 1px solid #e0e0e0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        h1 { font-size: 1.2rem; font-weight: 600; }
+        .lang-selector { display: flex; gap: 8px; flex-wrap: wrap; }
+        .lang-btn {
+            padding: 6px 16px;
+            border: 1px solid #d0d0d0;
+            border-radius: 20px;
+            background-color: #fff;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s ease;
+        }
+        .lang-btn:hover { border-color: #007bff; color: #007bff; }
+        .lang-btn.active { background-color: #007bff; color: white; border-color: #007bff; }
+        .container { display: flex; flex: 1; overflow: hidden; }
+        .editor-pane, .output-pane { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+        .editor-pane { border-right: 1px solid #e0e0e0; }
+        .pane-header {
+            padding: 8px 16px;
+            background-color: #fafafa;
+            border-bottom: 1px solid #e0e0e0;
+            font-size: 0.85rem;
+            color: #666;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+        #editor-container { flex: 1; height: 100%; width: 100%; }
+        #output { flex: 1; width: 100%; border: none; background-color: #ffffff; }
+        #console-output {
+            flex: 1; width: 100%; padding: 16px;
+            font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+            font-size: 0.9rem; background-color: #1e1e1e; color: #d4d4d4;
+            overflow-y: auto; white-space: pre-wrap; display: none;
+        }
+        .run-btn {
+            background-color: #28a745; color: white; border: none;
+            padding: 6px 20px; border-radius: 4px; cursor: pointer;
+            font-weight: 500; font-size: 0.9rem;
+        }
+        .run-btn:disabled { background-color: #6c757d; cursor: wait; }
+        .secondary-btn {
+            background-color: #ffffff; color: #555;
+            border: 1px solid #d0d0d0; padding: 6px 12px;
+            border-radius: 4px; cursor: pointer; font-size: 0.85rem;
+        }
+        .secondary-btn:hover { background-color: #f0f0f0; }
 
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
-<title>Gerenciador de Códigos</title>
-<meta name="claude:viewport-fit-sides" content="cover">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap">
-<style>
-:root{
-  /* Layout: gaveteiro. Índice de abas à esquerda, gaveta aberta à direita; no celular o índice vira uma faixa horizontal. */
-  --bg:#E8ECEE; --surface:#F7F9FA; --ink:#101A22; --muted:#55636E; --line:#C3CCD2;
-  --accent:#0A6B87; --accent-ink:#FFFFFF; --code-bg:#FCFDFD; --code-fg:#14202A; --tab-hover:#DFE5E8;
-  --ok:#1B7A4A; --warn:#8F5B00; --bad:#B3261E; --ok-bg:#DDF0E5; --warn-bg:#F6EAD0; --bad-bg:#F8DEDB;
-  --f-body:'IBM Plex Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
-  --f-label:'IBM Plex Sans Condensed','IBM Plex Sans',system-ui,sans-serif;
-  --f-mono:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
-}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]){
-    --bg:#0D1317; --surface:#141C22; --ink:#DCE5EA; --muted:#8A9AA5; --line:#28343D;
-    --accent:#56BBD6; --accent-ink:#04212A; --code-bg:#0A1014; --code-fg:#CBDDE6; --tab-hover:#1A252C;
-    --ok:#5FD08F; --warn:#E5B547; --bad:#FF8F85; --ok-bg:#123324; --warn-bg:#3A2D0E; --bad-bg:#3F1B18;
-    color-scheme:dark;
-  }
-}
-:root[data-theme="dark"]{
-  --bg:#0D1317; --surface:#141C22; --ink:#DCE5EA; --muted:#8A9AA5; --line:#28343D;
-  --accent:#56BBD6; --accent-ink:#04212A; --code-bg:#0A1014; --code-fg:#CBDDE6; --tab-hover:#1A252C;
-  --ok:#5FD08F; --warn:#E5B547; --bad:#FF8F85; --ok-bg:#123324; --warn-bg:#3A2D0E; --bad-bg:#3F1B18;
-  color-scheme:dark;
-}
-*{box-sizing:border-box}
-body{
-  background:var(--bg); color:var(--ink); font:15px/1.5 var(--f-body);
-  padding-left:max(16px, env(safe-area-inset-left, 0px));
-  padding-right:max(16px, env(safe-area-inset-right, 0px));
-  padding-block:24px 40px;
-}
-.app{max-width:1180px; margin:0 auto; display:flex; flex-direction:column; gap:18px}
-.top{display:flex; flex-wrap:wrap; gap:10px 20px; align-items:flex-end; justify-content:space-between}
-h1{font:600 26px/1.15 var(--f-label); letter-spacing:.01em; margin:0}
-.sub{margin:4px 0 0; color:var(--muted); max-width:62ch}
-.pill{
-  display:inline-flex; align-items:center; gap:7px; font:500 12px/1 var(--f-label); letter-spacing:.04em; text-transform:uppercase;
-  padding:6px 9px; border:1px solid var(--line); background:var(--surface); color:var(--muted);
-}
-.pill::before{content:""; width:7px; height:7px; background:currentColor; flex:none}
-.pill[data-s="ok"]{color:var(--ok); background:var(--ok-bg); border-color:transparent}
-.pill[data-s="bad"]{color:var(--bad); background:var(--bad-bg); border-color:transparent}
-.pill[data-s="warn"]{color:var(--warn); background:var(--warn-bg); border-color:transparent}
+        /* === Paste Area === */
+        #paste-container { display: none; flex: 1; position: relative; background-color: #fafafa; flex-direction: column; }
+        #paste-container.active { display: flex; }
+        #paste-textarea {
+            flex: 1; width: 100%; padding: 16px; border: none; outline: none; resize: none;
+            font-family: "SF Mono", Monaco, monospace; font-size: 14px; line-height: 1.6;
+            background-color: #ffffff; color: #333;
+        }
+        #paste-textarea::placeholder { color: #aaa; }
+        #drop-overlay {
+            display: none; position: absolute; inset: 0;
+            background-color: rgba(0, 123, 255, 0.08);
+            border: 3px dashed #007bff; align-items: center; justify-content: center;
+            font-size: 1.2rem; color: #007bff; font-weight: 600;
+            pointer-events: none; z-index: 10;
+        }
+        #drop-overlay.active { display: flex; }
+        #paste-info {
+            padding: 8px 16px; background-color: #f0f4f8;
+            border-top: 1px solid #e0e0e0; font-size: 0.8rem; color: #555;
+            display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+        }
+        #detected-lang {
+            padding: 3px 8px; border: 1px solid #d0d0d0; border-radius: 4px;
+            background: #fff; font-size: 0.8rem; font-weight: 600; color: #007bff; cursor: pointer;
+        }
+        .paste-actions { margin-left: auto; display: flex; gap: 8px; }
 
-.shell{display:grid; grid-template-columns:268px minmax(0,1fr); border:1px solid var(--line); background:var(--bg); min-height:520px}
-.tabs{display:flex; flex-direction:column; min-width:0; border-right:1px solid var(--line); overflow:auto; max-height:80vh}
-.tab{
-  display:flex; flex-direction:column; gap:2px; text-align:left; width:100%;
-  padding:11px 14px; border:0; border-bottom:1px solid var(--line); border-radius:0;
-  background:transparent; color:var(--ink); font:inherit; cursor:pointer;
-}
-.tab:hover{background:var(--tab-hover)}
-.tab-name{font-weight:500; overflow-wrap:anywhere}
-.tab-meta{font:500 11px/1.3 var(--f-label); letter-spacing:.05em; text-transform:uppercase; color:var(--muted)}
-.tab[aria-selected="true"]{background:var(--surface); margin-right:-1px; border-right:1px solid var(--surface)}
-.tab[aria-selected="true"] .tab-name{color:var(--accent); font-weight:600}
-.tab-new .tab-name{font-family:var(--f-label); letter-spacing:.03em}
-.panel{background:var(--surface); padding:20px; min-width:0; display:flex; flex-direction:column; gap:14px}
+        /* === Library === */
+        #library-container { display: none; flex: 1; flex-direction: column; background-color: #fafafa; overflow: hidden; }
+        #library-container.active { display: flex; }
+        .library-toolbar {
+            padding: 12px 16px; background: #fff; border-bottom: 1px solid #e0e0e0;
+            display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+        }
+        #library-search {
+            flex: 1; min-width: 200px; padding: 8px 12px;
+            border: 1px solid #d0d0d0; border-radius: 6px;
+            font-size: 0.9rem; outline: none;
+        }
+        #library-search:focus { border-color: #007bff; }
+        #library-list {
+            flex: 1; overflow-y: auto; padding: 16px;
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 12px; align-content: start;
+        }
+        #library-empty {
+            flex: 1; display: flex; flex-direction: column; align-items: center;
+            justify-content: center; text-align: center; padding: 32px; color: #777;
+        }
+        #library-empty h3 { margin-bottom: 8px; color: #555; }
+        .lib-card {
+            background: #fff; border: 1px solid #e0e0e0; border-radius: 8px;
+            padding: 14px; display: flex; flex-direction: column; gap: 8px;
+            transition: box-shadow 0.2s, transform 0.2s;
+        }
+        .lib-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.08); transform: translateY(-1px); }
+        .lib-card-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+        .lib-lang {
+            padding: 2px 8px; border-radius: 12px; font-size: 0.7rem;
+            font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .lib-lang-html { background: #ffe0b2; color: #e65100; }
+        .lib-lang-python { background: #c8e6c9; color: #2e7d32; }
+        .lib-lang-css { background: #bbdefb; color: #1565c0; }
+        .lib-lang-javascript { background: #fff9c4; color: #f57f17; }
+        .lib-lang-unknown { background: #eeeeee; color: #616161; }
+        .lib-date { font-size: 0.75rem; color: #999; }
+        .lib-title { font-weight: 600; font-size: 0.95rem; color: #333; word-break: break-word; line-height: 1.3; }
+        .lib-preview {
+            font-family: "SF Mono", Monaco, monospace; font-size: 0.75rem; color: #666;
+            background: #f5f5f5; padding: 8px; border-radius: 4px;
+            max-height: 80px; overflow: hidden; white-space: pre-wrap;
+            word-break: break-all; line-height: 1.4;
+        }
+        .lib-actions { display: flex; gap: 6px; margin-top: 4px; }
+        .lib-btn {
+            padding: 5px 10px; border: 1px solid #d0d0d0; background: #fff;
+            border-radius: 4px; cursor: pointer; font-size: 0.8rem; color: #555;
+            transition: all 0.15s;
+        }
+        .lib-btn:hover { background: #f0f0f0; }
+        .lib-btn-open { background: #007bff; color: white; border-color: #007bff; flex: 1; }
+        .lib-btn-open:hover { background: #0056b3; }
+        .lib-btn-del:hover { background: #ffebee; color: #c62828; border-color: #ef9a9a; }
 
-button{font:inherit}
-:focus-visible{outline:2px solid var(--accent); outline-offset:2px}
-.btn{
-  border:1px solid var(--line); background:transparent; color:var(--ink); padding:7px 12px; border-radius:2px;
-  font:500 13px/1.2 var(--f-body); cursor:pointer;
-}
-.btn:hover{border-color:var(--accent); color:var(--accent)}
-.btn[disabled]{opacity:.45; cursor:not-allowed}
-.btn.primary{background:var(--accent); color:var(--accent-ink); border-color:var(--accent)}
-.btn.primary:hover{filter:brightness(1.08); color:var(--accent-ink)}
-.btn.danger{color:var(--bad)}
-.btn.danger:hover{border-color:var(--bad); color:var(--bad)}
-.btn.danger.armed{background:var(--bad); color:var(--surface); border-color:var(--bad)}
-.row{display:flex; flex-wrap:wrap; gap:8px; align-items:center}
-
-.d-head{display:flex; flex-direction:column; gap:4px; min-width:0}
-.d-titlerow{display:flex; flex-wrap:wrap; gap:10px; align-items:center}
-.d-title{font:600 22px/1.2 var(--f-label); margin:0; overflow-wrap:anywhere}
-.badge{font:500 11px/1 var(--f-mono); padding:4px 6px; border:1px solid var(--line); color:var(--muted); letter-spacing:.04em}
-.d-sub{margin:0; color:var(--muted); font-size:13px; overflow-wrap:anywhere}
-.mono{font-family:var(--f-mono); font-size:12px}
-
-.field{display:flex; flex-direction:column; gap:5px; min-width:0}
-.field label, .lab{font:500 12px/1.2 var(--f-label); letter-spacing:.06em; text-transform:uppercase; color:var(--muted)}
-input[type="text"], select, textarea{
-  width:100%; min-width:0; background:var(--code-bg); color:var(--code-fg); border:1px solid var(--line); border-radius:2px;
-  padding:8px 10px; font:14px/1.4 var(--f-body);
-}
-select{appearance:auto}
-textarea{
-  font:13px/1.55 var(--f-mono); min-height:300px; resize:vertical; white-space:pre; overflow:auto; tab-size:4;
-}
-.formgrid{display:grid; grid-template-columns:minmax(0,2fr) minmax(0,1fr); gap:12px}
-.drop{
-  border:1px dashed var(--line); padding:10px 12px; color:var(--muted); font-size:13px;
-  display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between;
-}
-.drop.over{border-color:var(--accent); color:var(--accent)}
-.hint{margin:0; font-size:12.5px; color:var(--muted)}
-.status{min-height:1.4em; margin:0; font-size:13px}
-.status[data-s="bad"]{color:var(--bad)}
-.status[data-s="ok"]{color:var(--ok)}
-.intro{margin:0; padding:12px 14px; border:1px solid var(--line); background:var(--bg); font-size:14px}
-
-.codewrap{
-  display:grid; grid-template-columns:auto 1fr; max-height:58vh; overflow:auto;
-  border:1px solid var(--line); background:var(--code-bg);
-}
-.gutter, .code{margin:0; font:12.5px/1.6 var(--f-mono); white-space:pre; padding-block:12px}
-.gutter{position:sticky; left:0; text-align:right; padding-inline:10px; color:var(--muted); background:var(--code-bg); border-right:1px solid var(--line); user-select:none}
-.code{padding-inline:14px; color:var(--code-fg); min-width:max-content; tab-size:4}
-
-.runpanel{border:1px solid var(--line); background:var(--bg); display:flex; flex-direction:column}
-.runbar{display:flex; flex-wrap:wrap; gap:8px 14px; align-items:center; justify-content:space-between; padding:9px 12px; border-bottom:1px solid var(--line)}
-.runframe{display:block; width:100%; height:420px; border:0; background:#fff; resize:vertical; overflow:auto}
-.console{margin:0; max-height:190px; overflow:auto; padding:8px 12px; border-top:1px solid var(--line); font:12px/1.55 var(--f-mono); background:var(--code-bg); color:var(--code-fg)}
-.console div{white-space:pre-wrap; overflow-wrap:anywhere}
-.console .error{color:var(--bad)}
-.console .warn{color:var(--warn)}
-.console .none{color:var(--muted)}
-
-.rules{border:1px solid var(--line); background:var(--surface); padding:12px 16px}
-.rules summary{cursor:pointer; font:500 13px/1.3 var(--f-label); letter-spacing:.06em; text-transform:uppercase; color:var(--muted)}
-.rules ul{margin:10px 0 0; padding-left:20px; display:flex; flex-direction:column; gap:6px; font-size:14px}
-
-@media (max-width:760px){
-  body{padding-block:16px 28px}
-  h1{font-size:22px}
-  .shell{grid-template-columns:minmax(0,1fr); min-height:0}
-  .tabs{flex-direction:row; border-right:0; border-bottom:1px solid var(--line); max-height:none; overflow-x:auto; overflow-y:hidden}
-  .tab{flex:0 0 auto; width:auto; min-width:132px; max-width:220px; border-bottom:0; border-right:1px solid var(--line)}
-  .tab[aria-selected="true"]{margin-right:0; border-right:1px solid var(--line); margin-bottom:-1px; border-bottom:1px solid var(--surface)}
-  .panel{padding:14px}
-  .formgrid{grid-template-columns:minmax(0,1fr)}
-  .runframe{height:340px}
-}
-@media (prefers-reduced-motion:reduce){*{animation:none!important; transition:none!important}}
-</style>
-
-<div class="app">
-  <header class="top">
-    <div>
-      <h1>Gerenciador de Códigos</h1>
-      <p class="sub">Cada código fica na sua própria aba, guardado exatamente como foi enviado, com um selo SHA-256 para provar que nada mudou.</p>
+        /* === Modal === */
+        #modal-overlay {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.4); z-index: 1000;
+            align-items: center; justify-content: center;
+        }
+        .modal {
+            background: #fff; border-radius: 10px; padding: 24px;
+            min-width: 360px; max-width: 90vw;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            display: flex; flex-direction: column; gap: 16px;
+        }
+        .modal h3 { font-size: 1.1rem; color: #333; }
+        #modal-input {
+            padding: 10px 12px; border: 1px solid #d0d0d0; border-radius: 6px;
+            font-size: 0.95rem; outline: none; width: 100%;
+        }
+        #modal-input:focus { border-color: #007bff; }
+        .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+        .modal-actions button {
+            padding: 8px 18px; border-radius: 6px; border: 1px solid #d0d0d0;
+            background: #fff; cursor: pointer; font-size: 0.9rem;
+        }
+        #modal-confirm { background: #007bff; color: white; border-color: #007bff; }
+        #modal-confirm:hover { background: #0056b3; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>⚡ Meu Laboratório de Código</h1>
+        <div class="lang-selector">
+            <button class="lang-btn active" data-lang="html">HTML</button>
+            <button class="lang-btn" data-lang="python">Python</button>
+            <button class="lang-btn" data-lang="paste">📋 Colar Código</button>
+            <button class="lang-btn" data-lang="library">💾 Salvos</button>
+        </div>
+    </header>
+    <div class="container">
+        <div class="editor-pane">
+            <div class="pane-header">
+                <span id="pane-title">Código</span>
+                <div style="display: flex; gap: 6px;">
+                    <button class="secondary-btn" id="save-btn" style="display:none;">💾 Salvar</button>
+                    <button class="run-btn" id="run-btn">Executar</button>
+                </div>
+            </div>
+            <div id="editor-container"></div>
+            <div id="paste-container">
+                <div id="drop-overlay">📁 Solte os arquivos aqui</div>
+                <textarea id="paste-textarea" placeholder="📋 Cole seu código aqui (HTML, Python, CSS, JS...)&#10;&#10;📁 Ou arraste arquivos para cá (aceita múltiplos: .html + .css + .js)&#10;📂 Ou use 'Carregar Arquivo' para escolher do seu computador"></textarea>
+                <div id="paste-info">
+                    <span>Detectado:</span>
+                    <select id="detected-lang">
+                        <option value="unknown">— Auto —</option>
+                        <option value="html">HTML</option>
+                        <option value="css">CSS</option>
+                        <option value="javascript">JavaScript</option>
+                        <option value="python">Python</option>
+                    </select>
+                    <span id="paste-stats">0 caracteres · 0 linhas</span>
+                    <div class="paste-actions">
+                        <button class="secondary-btn" id="paste-upload-btn">📂 Carregar Arquivo</button>
+                        <button class="secondary-btn" id="paste-clear-btn">🗑️ Limpar</button>
+                        <button class="run-btn" id="paste-test-btn">▶ Testar</button>
+                    </div>
+                </div>
+                <input type="file" id="file-input" style="display:none;" multiple accept=".html,.htm,.css,.js,.jsx,.ts,.tsx,.py,.json,.txt,.md,.xml,.svg,.sql,.sh,.yaml,.yml">
+            </div>
+            <div id="library-container">
+                <div class="library-toolbar">
+                    <input type="text" id="library-search" placeholder="🔍 Buscar por título ou conteúdo...">
+                    <button class="secondary-btn" id="library-export-btn">⬇️ Exportar</button>
+                    <button class="secondary-btn" id="library-import-btn">⬆️ Importar</button>
+                    <input type="file" id="library-import-input" accept=".json" style="display:none;">
+                </div>
+                <div id="library-list"></div>
+                <div id="library-empty">
+                    <div style="font-size: 3rem;">📭</div>
+                    <h3>Nenhum código salvo ainda</h3>
+                    <p>Use o botão <strong>💾 Salvar</strong> nas abas HTML, Python ou Colar Código para guardar aqui.</p>
+                    <p style="font-size: 0.85rem; color: #999; margin-top: 12px;">Os códigos ficam no seu navegador (localStorage) e sobrevivem a recarregamentos.</p>
+                </div>
+            </div>
+        </div>
+        <div class="output-pane">
+            <div class="pane-header"><span>Resultado</span></div>
+            <iframe id="output"></iframe>
+            <div id="console-output"></div>
+        </div>
     </div>
-    <span id="storage" class="pill" data-s="warn">Conectando…</span>
-  </header>
 
-  <div class="shell">
-    <nav class="tabs" id="tabs" role="tablist" aria-label="Códigos armazenados"></nav>
-    <main class="panel" id="panel" role="tabpanel"></main>
+    <!-- Modal -->
+    <div id="modal-overlay">
+        <div class="modal">
+            <h3 id="modal-title">Salvar código</h3>
+            <input type="text" id="modal-input" placeholder="Nome do código...">
+            <div class="modal-actions">
+                <button id="modal-cancel">Cancelar</button>
+                <button id="modal-confirm">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs/loader.js"></script>
+    <script src="https://cdn.jsdelivr.net/pyodide/v0.26.2/full/pyodide.js"></script>
+    <script>
+        let editor;
+        let pyodide;
+        let currentLang = 'html';
+        let detectedLang = 'unknown';
+
+        const samples = {
+            html: `<!DOCTYPE html>
+<html>
+<head>
+  <style>
+    body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0; background: #f0f4f8; }
+    .card { background: white; padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; }
+    h2 { color: #007bff; margin-top: 0; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Olá, Mundo!</h2>
+    <p>Este é um preview em tempo real.</p>
+    <button onclick="alert('Funciona!')">Clique aqui</button>
   </div>
+</body>
+</html>`,
+            python: `# Execute seu código Python aqui
+import sys
 
-  <details class="rules">
-    <summary>O que o gerenciador garante</summary>
-    <ul>
-      <li>O código é gravado como texto literal. Nada é formatado, corrigido, otimizado ou reorganizado.</li>
-      <li>Cada código tem aba, registro e selo SHA-256 próprios. Adicionar um novo nunca toca nos existentes.</li>
-      <li>O gerenciador (esta página) fica separado dos códigos, que só entram na tela como texto ou dentro de um quadro isolado.</li>
-      <li>Executar usa um quadro isolado, confere o selo antes e depois e bloqueia a execução se o conteúdo não bater.</li>
-      <li>Só o botão "Substituir conteúdo", na aba daquele código e com confirmação, altera um código guardado.</li>
-      <li>Limites: digitar no campo de texto faz o navegador trocar quebras CRLF por LF. Colar e importar arquivo preservam o original. Em JavaScript, a execução embrulha o código numa página mínima, e o texto guardado continua intacto. Um <span class="mono">&lt;/script&gt;</span> dentro de um JS guardado como "JavaScript" interrompe a execução; guarde-o como HTML.</li>
-    </ul>
-  </details>
-</div>
+def greet(name):
+    return f"Olá, {name}!"
 
+print(greet("Desenvolvedor"))
+print(f"Versão do Python: {sys.version}")
+`
+        };
+
+        const savedContent = { html: samples.html, python: samples.python };
+
+        // === Utilidades ===
+        function uuid() {
+            if (typeof crypto !== 'undefined' && crypto.randomUUID) return crypto.randomUUID();
+            return 'id-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10);
+        }
+        function escapeHtml(str) {
+            return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        }
+        function formatDate(ts) {
+            const diff = Date.now() - ts;
+            if (diff < 60000) return 'agora';
+            if (diff < 3600000) return Math.floor(diff/60000) + 'min atrás';
+            if (diff < 86400000) return Math.floor(diff/3600000) + 'h atrás';
+            return new Date(ts).toLocaleDateString('pt-BR') + ' ' + new Date(ts).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+        }
+
+        // === === === STORAGE === === ===
+        const STORAGE_KEY = 'lab_code_saved_v1';
+        let savedItems = (() => {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                return raw ? JSON.parse(raw) : [];
+            } catch (e) { return []; }
+        })();
+
+        function persistSaved(items) {
+            try {
+                const json = JSON.stringify(items);
+                if (json.length > 4 * 1024 * 1024) {
+                    if (!confirm(`⚠️ Seus códigos ocupam ${(json.length/1024/1024).toFixed(1)}MB. Isso pode encher o armazenamento do navegador. Continuar?`)) return false;
+                }
+                localStorage.setItem(STORAGE_KEY, json);
+                return true;
+            } catch (e) {
+                alert('Erro ao salvar: ' + e.message + '\n\nO armazenamento pode estar cheio. Exclua ou exporte alguns códigos.');
+                return false;
+            }
+        }
+
+        function updateSavedBadge() {
+            const btn = document.querySelector('.lang-btn[data-lang="library"]');
+            if (btn) btn.textContent = savedItems.length ? `💾 Salvos (${savedItems.length})` : '💾 Salvos';
+        }
+
+        // === === === MODAL === === ===
+        let modalResolve = null;
+        function showModal(title, defaultValue = '', placeholder = '') {
+            return new Promise(resolve => {
+                modalResolve = resolve;
+                document.getElementById('modal-title').textContent = title;
+                const input = document.getElementById('modal-input');
+                input.value = defaultValue;
+                input.placeholder = placeholder;
+                document.getElementById('modal-overlay').style.display = 'flex';
+                setTimeout(() => { input.focus(); input.select(); }, 50);
+            });
+        }
+        document.getElementById('modal-cancel').onclick = () => {
+            document.getElementById('modal-overlay').style.display = 'none';
+            if (modalResolve) modalResolve(null);
+            modalResolve = null;
+        };
+        document.getElementById('modal-confirm').onclick = () => {
+            const val = document.getElementById('modal-input').value.trim();
+            document.getElementById('modal-overlay').style.display = 'none';
+            if (modalResolve) modalResolve(val);
+            modalResolve = null;
+        };
+        document.getElementById('modal-input').onkeydown = (e) => {
+            if (e.key === 'Enter') document.getElementById('modal-confirm').click();
+            if (e.key === 'Escape') document.getElementById('modal-cancel').click();
+        };
+
+        // === === === SAVE / LIBRARY === === ===
+        async function saveCurrentCode(lang, code) {
+            if (!code || !code.trim()) { alert('Nada para salvar.'); return; }
+            const def = `Meu ${lang} - ${new Date().toLocaleDateString('pt-BR')}`;
+            const title = await showModal('💾 Salvar código', def, 'Nome do código...');
+            if (title === null) return;
+            const item = {
+                id: uuid(),
+                title: title || 'Sem título',
+                lang: lang,
+                code: code,
+                createdAt: Date.now(),
+                updatedAt: Date.now()
+            };
+            savedItems.push(item);
+            if (persistSaved(savedItems)) {
+                updateSavedBadge();
+                renderLibrary();
+            }
+        }
+
+        document.getElementById('save-btn').onclick = () => {
+            if (currentLang === 'paste') {
+                const lang = detectedSelect.value !== 'unknown' ? detectedSelect.value : (detectedLang !== 'unknown' ? detectedLang : 'html');
+                saveCurrentCode(lang, pasteTextarea.value);
+            } else if (currentLang === 'html' || currentLang === 'python') {
+                saveCurrentCode(currentLang, editor.getValue());
+            }
+        };
+
+        function renderLibrary(filter = '') {
+            const container = document.getElementById('library-list');
+            const empty = document.getElementById('library-empty');
+            const f = filter.trim().toLowerCase();
+            const filtered = savedItems.filter(item =>
+                !f || item.title.toLowerCase().includes(f) || (item.code || '').toLowerCase().includes(f)
+            ).sort((a,b) => b.updatedAt - a.updatedAt);
+
+            if (filtered.length === 0) {
+                container.innerHTML = '';
+                empty.style.display = 'flex';
+                if (f) {
+                    empty.querySelector('h3').textContent = 'Nenhum resultado para "' + filter + '"';
+                } else {
+                    empty.querySelector('h3').textContent = 'Nenhum código salvo ainda';
+                }
+                return;
+            }
+            empty.style.display = 'none';
+
+            container.innerHTML = filtered.map(item => `
+                <div class="lib-card" data-id="${item.id}">
+                    <div class="lib-card-header">
+                        <span class="lib-lang lib-lang-${escapeHtml(item.lang || 'unknown')}">${escapeHtml(item.lang || '?')}</span>
+                        <span class="lib-date">${formatDate(item.updatedAt)}</span>
+                    </div>
+                    <div class="lib-title">${escapeHtml(item.title)}</div>
+                    <div class="lib-preview">${escapeHtml((item.code || '').substring(0, 200))}</div>
+                    <div class="lib-actions">
+                        <button class="lib-btn lib-btn-open" title="Abrir">📂 Abrir</button>
+                        <button class="lib-btn lib-btn-rename" title="Renomear">✏️</button>
+                        <button class="lib-btn lib-btn-dup" title="Duplicar">📋</button>
+                        <button class="lib-btn lib-btn-del" title="Excluir">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+
+            container.querySelectorAll('.lib-card').forEach(card => {
+                const id = card.dataset.id;
+                card.querySelector('.lib-btn-open').onclick = () => openSaved(id);
+                card.querySelector('.lib-btn-rename').onclick = () => renameSaved(id);
+                card.querySelector('.lib-btn-dup').onclick = () => duplicateSaved(id);
+                card.querySelector('.lib-btn-del').onclick = () => deleteSaved(id);
+            });
+        }
+
+        function openSaved(id) {
+            const item = savedItems.find(i => i.id === id);
+            if (!item) return;
+
+            if (item.lang === 'html' || item.lang === 'python') {
+                savedContent[item.lang] = item.code;
+                document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+                document.querySelector(`.lang-btn[data-lang="${item.lang}"]`).classList.add('active');
+                switchMode(item.lang);
+                if (item.lang === 'html') updateHtmlPreview();
+            } else {
+                pasteTextarea.value = item.code;
+                const mapped = item.lang === 'css' ? 'css' : (item.lang === 'javascript' ? 'javascript' : 'unknown');
+                detectedSelect.value = mapped;
+                detectedLang = mapped;
+                updatePasteInfo();
+                document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+                document.querySelector(`.lang-btn[data-lang="paste"]`).classList.add('active');
+                switchMode('paste');
+            }
+        }
+
+        async function renameSaved(id) {
+            const item = savedItems.find(i => i.id === id);
+            if (!item) return;
+            const newTitle = await showModal('✏️ Renomear', item.title, 'Novo nome...');
+            if (newTitle === null || !newTitle) return;
+            item.title = newTitle;
+            item.updatedAt = Date.now();
+            if (persistSaved(savedItems)) renderLibrary(document.getElementById('library-search').value);
+        }
+
+        function duplicateSaved(id) {
+            const item = savedItems.find(i => i.id === id);
+            if (!item) return;
+            const copy = { ...item, id: uuid(), title: item.title + ' (cópia)', createdAt: Date.now(), updatedAt: Date.now() };
+            savedItems.push(copy);
+            if (persistSaved(savedItems)) {
+                updateSavedBadge();
+                renderLibrary(document.getElementById('library-search').value);
+            }
+        }
+
+        function deleteSaved(id) {
+            const item = savedItems.find(i => i.id === id);
+            if (!item) return;
+            if (!confirm(`Excluir "${item.title}"?`)) return;
+            savedItems = savedItems.filter(i => i.id !== id);
+            if (persistSaved(savedItems)) {
+                updateSavedBadge();
+                renderLibrary(document.getElementById('library-search').value);
+            }
+        }
+
+        document.getElementById('library-search').addEventListener('input', (e) => renderLibrary(e.target.value));
+
+        // Export / Import
+        document.getElementById('library-export-btn').onclick = () => {
+            if (savedItems.length === 0) { alert('Nada para exportar.'); return; }
+            const blob = new Blob([JSON.stringify(savedItems, null, 2)], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `lab-codigos-${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        };
+        document.getElementById('library-import-btn').onclick = () => document.getElementById('library-import-input').click();
+        document.getElementById('library-import-input').onchange = async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            try {
+                const text = await file.text();
+                const data = JSON.parse(text);
+                if (!Array.isArray(data)) throw new Error('Formato inválido (esperado array).');
+                let added = 0;
+                for (const x of data) {
+                    if (!x || !x.code) continue;
+                    const newItem = {
+                        id: savedItems.find(i => i.id === x.id) ? uuid() : (x.id || uuid()),
+                        title: x.title || 'Sem título',
+                        lang: x.lang || 'html',
+                        code: x.code,
+                        createdAt: x.createdAt || Date.now(),
+                        updatedAt: x.updatedAt || Date.now()
+                    };
+                    savedItems.push(newItem);
+                    added++;
+                }
+                if (persistSaved(savedItems)) {
+                    updateSavedBadge();
+                    renderLibrary();
+                    alert(`✅ ${added} código(s) importado(s).`);
+                }
+            } catch (err) {
+                alert('Erro ao importar: ' + err.message);
+            }
+            e.target.value = '';
+        };
+
+        // === === === MONACO === === ===
+        require.config({ paths: { 'vs': 'https://cdn.jsdelivr.net/npm/monaco-editor@0.52.2/min/vs' }});
+        require(['vs/editor/editor.main'], function() {
+            editor = monaco.editor.create(document.getElementById('editor-container'), {
+                value: samples.html,
+                language: 'html',
+                theme: 'vs',
+                automaticLayout: true,
+                minimap: { enabled: false },
+                fontSize: 14,
+                wordWrap: 'on',
+                scrollBeyondLastLine: false,
+            });
+            editor.onDidChangeModelContent(() => {
+                if (currentLang === 'html') updateHtmlPreview();
+                if (currentLang === 'html' || currentLang === 'python') {
+                    savedContent[currentLang] = editor.getValue();
+                }
+            });
+            updateHtmlPreview();
+        });
+
+        // === === === TABS === === ===
+        document.querySelectorAll('.lang-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                switchMode(btn.dataset.lang);
+            });
+        });
+
+        function switchMode(lang) {
+            // Salva conteúdo do editor antes de trocar (só se estava em html/python)
+            if ((currentLang === 'html' || currentLang === 'python') && editor && editor.getModel()) {
+                savedContent[currentLang] = editor.getValue();
+            }
+            const previousLang = currentLang;
+            currentLang = lang;
+
+            const editorEl = document.getElementById('editor-container');
+            const pasteEl = document.getElementById('paste-container');
+            const libraryEl = document.getElementById('library-container');
+            const iframe = document.getElementById('output');
+            const consoleOut = document.getElementById('console-output');
+            const runBtn = document.getElementById('run-btn');
+            const saveBtn = document.getElementById('save-btn');
+            const paneTitle = document.getElementById('pane-title');
+
+            editorEl.style.display = 'none';
+            pasteEl.classList.remove('active');
+            libraryEl.classList.remove('active');
+
+            if (lang === 'library') {
+                libraryEl.classList.add('active');
+                runBtn.style.display = 'none';
+                saveBtn.style.display = 'none';
+                paneTitle.textContent = 'Códigos Salvos';
+                renderLibrary(document.getElementById('library-search').value);
+                return;
+            }
+
+            if (lang === 'paste') {
+                pasteEl.classList.add('active');
+                runBtn.style.display = 'none';
+                saveBtn.style.display = 'inline-block';
+                paneTitle.textContent = 'Colar Código';
+                return;
+            }
+
+            // html ou python
+            editorEl.style.display = 'block';
+            saveBtn.style.display = 'inline-block';
+            paneTitle.textContent = 'Código';
+
+            if (editor && editor.getModel()) {
+                monaco.editor.setModelLanguage(editor.getModel(), lang === 'html' ? 'html' : 'python');
+                editor.setValue(savedContent[lang] || '');
+            }
+
+            if (lang === 'html') {
+                iframe.style.display = 'block';
+                consoleOut.style.display = 'none';
+                runBtn.style.display = 'none';
+                updateHtmlPreview();
+            } else {
+                iframe.style.display = 'none';
+                consoleOut.style.display = 'block';
+                runBtn.style.display = 'inline-block';
+                if (previousLang !== 'python') {
+                    consoleOut.textContent = '// O resultado da execução do Python aparecerá aqui.\n// Clique em "Executar".';
+                }
+            }
+        }
+
+        function updateHtmlPreview() {
+            document.getElementById('output').srcdoc = editor.getValue();
+        }
+
+        // === === === PYTHON RUN === === ===
+        document.getElementById('run-btn').addEventListener('click', async () => {
+            if (currentLang !== 'python') return;
+            const runBtn = document.getElementById('run-btn');
+            const consoleOut = document.getElementById('console-output');
+            runBtn.disabled = true;
+            runBtn.textContent = 'Carregando...';
+            consoleOut.textContent = '// Inicializando ambiente Python (pode levar alguns segundos na primeira vez)...';
+            try {
+                await ensurePyodide(consoleOut);
+                consoleOut.textContent = '// Executando...\n\n';
+                await pyodide.runPythonAsync(editor.getValue());
+                if (consoleOut.textContent === '// Executando...\n\n') {
+                    consoleOut.textContent += '// (Nenhuma saída no console)';
+                }
+            } catch (error) {
+                consoleOut.textContent += '\nERRO NA EXECUÇÃO:\n' + error;
+            } finally {
+                runBtn.disabled = false;
+                runBtn.textContent = 'Executar';
+            }
+        });
+
+        async function ensurePyodide(consoleOut) {
+            if (pyodide) return;
+            pyodide = await loadPyodide({
+                stdout: (text) => { consoleOut.textContent += text + '\n'; },
+                stderr: (text) => { consoleOut.textContent += 'ERRO: ' + text + '\n'; }
+            });
+            consoleOut.textContent = '';
+        }
+
+        // === === === PASTE MODE === === ===
+        const pasteTextarea = document.getElementById('paste-textarea');
+        const pasteContainer = document.getElementById('paste-container');
+        const dropOverlay = document.getElementById('drop-overlay');
+        const fileInput = document.getElementById('file-input');
+        const detectedSelect = document.getElementById('detected-lang');
+
+        function detectLanguage(code) {
+            const c = code.trim();
+            if (!c) return 'unknown';
+            if (/<!DOCTYPE\s+html|<html[\s>]|<head[\s>]|<body[\s>]/i.test(c)) return 'html';
+            if (/^\s*(def|class)\s+\w+\s*[\(:]|^\s*(import|from)\s+\w+/m.test(c)) return 'python';
+            if (/^\s*print\s*\(/m.test(c) && !/[;{}]/.test(c)) return 'python';
+            if (/<(div|span|p|h[1-6]|a|img|ul|ol|li|table|form|input|button|section|header|footer|nav|main|article)[\s>]/i.test(c)) return 'html';
+            const hasCssProp = /[\w-]+\s*:\s*[^;{}\n]+;/m.test(c);
+            const hasCssSelector = /^[.#]?[\w\s,>+~:()\[\]="'-]+\s*\{/m.test(c);
+            if (hasCssProp && hasCssSelector && !/\bfunction\b|\bconst\b|\blet\b|\bvar\b|\b=>/.test(c)) return 'css';
+            if (/\bfunction\s+\w*\s*\(|\b(const|let|var)\s+\w+|=>\s*[{(]|console\.\w+|document\.\w+/m.test(c)) return 'javascript';
+            if (/\{[^{}]*:[^{}]*\}/.test(c) && !/\/\//.test(c)) return 'css';
+            return 'unknown';
+        }
+
+        function updatePasteInfo() {
+            const code = pasteTextarea.value;
+            const lines = code ? code.split('\n').length : 0;
+            document.getElementById('paste-stats').textContent = `${code.length} caracteres · ${lines} linhas`;
+            if (code.trim()) {
+                detectedLang = detectLanguage(code);
+                detectedSelect.value = detectedLang;
+            } else {
+                detectedLang = 'unknown';
+                detectedSelect.value = 'unknown';
+            }
+        }
+
+        let infoTimer;
+        pasteTextarea.addEventListener('input', () => {
+            clearTimeout(infoTimer);
+            infoTimer = setTimeout(updatePasteInfo, 300);
+        });
+        detectedSelect.addEventListener('change', () => { detectedLang = detectedSelect.value; });
+
+        // Drag & Drop
+        let dragCounter = 0;
+        pasteContainer.addEventListener('dragenter', (e) => {
+            e.preventDefault(); dragCounter++; dropOverlay.classList.add('active');
+        });
+        pasteContainer.addEventListener('dragover', (e) => e.preventDefault());
+        pasteContainer.addEventListener('dragleave', (e) => {
+            e.preventDefault(); dragCounter--;
+            if (dragCounter <= 0) { dropOverlay.classList.remove('active'); dragCounter = 0; }
+        });
+        pasteContainer.addEventListener('drop', async (e) => {
+            e.preventDefault();
+            dropOverlay.classList.remove('active');
+            dragCounter = 0;
+            const files = Array.from(e.dataTransfer.files);
+            if (files.length) await handleFiles(files);
+            else {
+                const text = e.dataTransfer.getData('text/plain');
+                if (text) { pasteTextarea.value = text; updatePasteInfo(); }
+            }
+        });
+
+        document.getElementById('paste-upload-btn').addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', async (e) => {
+            const files = Array.from(e.target.files);
+            if (files.length) await handleFiles(files);
+            fileInput.value = '';
+        });
+
+        async function handleFiles(files) {
+            if (files.length === 1) {
+                const text = await files[0].text();
+                pasteTextarea.value = text;
+                updatePasteInfo();
+                return;
+            }
+            const html = [], css = [], js = [], py = [];
+            for (const file of files) {
+                const text = await file.text();
+                const ext = file.name.split('.').pop().toLowerCase();
+                if (ext === 'html' || ext === 'htm') html.push(text);
+                else if (ext === 'css') css.push(text);
+                else if (ext === 'js') js.push(text);
+                else if (ext === 'py') py.push(`# === ${file.name} ===\n${text}`);
+            }
+            if (py.length) pasteTextarea.value = py.join('\n\n');
+            else if (html.length || css.length || js.length) pasteTextarea.value = combineIntoHtml(html.join('\n'), css.join('\n'), js.join('\n'));
+            updatePasteInfo();
+        }
+
+        function combineIntoHtml(html, css, js) {
+            let result = html.trim() || `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Teste</title></head>
+<body><h1>Preview</h1></body>
+</html>`;
+            if (css.trim()) {
+                const styleTag = `<style>\n${css}\n</style>`;
+                if (/<\/head>/i.test(result)) result = result.replace(/<\/head>/i, `${styleTag}\n</head>`);
+                else if (/<body[^>]*>/i.test(result)) result = result.replace(/<body[^>]*>/i, (m) => `<head>${styleTag}</head>\n${m}`);
+                else result = `${styleTag}\n${result}`;
+            }
+            if (js.trim()) {
+                const scriptTag = `<script>\n${js}\n<\/script>`;
+                if (/<\/body>/i.test(result)) result = result.replace(/<\/body>/i, `${scriptTag}\n</body>`);
+                else result += `\n${scriptTag}`;
+            }
+            return result;
+        }
+
+        document.getElementById('paste-clear-btn').addEventListener('click', () => {
+            if (pasteTextarea.value && !confirm('Limpar o conteúdo colado?')) return;
+            pasteTextarea.value = '';
+            updatePasteInfo();
+            document.getElementById('output').srcdoc = '';
+            document.getElementById('console-output').textContent = '';
+        });
+
+        document.getElementById('paste-test-btn').addEventListener('click', async () => {
+            const code = pasteTextarea.value.trim();
+            if (!code) { alert('Cole algum código primeiro!'); return; }
+            const chosen = detectedSelect.value !== 'unknown' ? detectedSelect.value : (detectedLang !== 'unknown' ? detectedLang : 'html');
+            const btn = document.getElementById('paste-test-btn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Testando...';
+            try { await runPastedCode(code, chosen); }
+            catch (err) { alert('Erro ao testar: ' + err.message); }
+            finally { btn.disabled = false; btn.textContent = '▶ Testar'; }
+        });
+
+        async function runPastedCode(code, lang) {
+            const iframe = document.getElementById('output');
+            const consoleOut = document.getElementById('console-output');
+            if (lang === 'python') {
+                iframe.style.display = 'none';
+                consoleOut.style.display = 'block';
+                consoleOut.textContent = '// Inicializando Python...';
+                await ensurePyodide(consoleOut);
+                consoleOut.textContent = '// Executando...\n\n';
+                await pyodide.runPythonAsync(code);
+                if (consoleOut.textContent === '// Executando...\n\n') {
+                    consoleOut.textContent += '// (Nenhuma saída no console)';
+                }
+                return;
+            }
+            iframe.style.display = 'block';
+            consoleOut.style.display = 'none';
+            iframe.srcdoc = buildHtmlForTest(code, lang);
+        }
+
+        function buildHtmlForTest(code, lang) {
+            if (lang === 'html') return code;
+            if (lang === 'css') {
+                return `<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<style>${code}</style>
+<style>
+body { font-family: -apple-system, sans-serif; padding: 24px; background: #fafafa; color: #333; }
+.demo-note { background: #e3f2fd; padding: 12px 16px; border-radius: 8px; border-left: 4px solid #007bff; margin-bottom: 24px; font-size: 14px; }
+</style>
+</head><body>
+<div class="demo-note">💡 <strong>Preview CSS:</strong> suas regras estão aplicadas ao HTML abaixo. Cole seu próprio HTML na aba HTML para testar com seu conteúdo.</div>
+<h1>Título de Exemplo</h1>
+<p>Este é um parágrafo de exemplo com <a href="#">um link</a>.</p>
+<button>Botão</button>
+<ul><li>Item 1</li><li>Item 2</li></ul>
+<div class="container"><div class="box">Box</div></div>
+</body></html>`;
+            }
+            if (lang === 'javascript') {
+                return `<!DOCTYPE html>
+<html><head><meta charset="UTF-8">
+<style>
+body { font-family: "SF Mono", Monaco, monospace; padding: 24px; background: #1e1e1e; color: #d4d4d4; margin: 0; }
+h3 { color: #4fc3f7; margin: 0 0 12px; }
+#out { background: #252526; padding: 16px; border-radius: 8px; min-height: 100px; white-space: pre-wrap; margin: 0; font-size: 13px; line-height: 1.5; }
+</style>
+</head><body>
+<h3>🖥️ Console de Saída</h3>
+<pre id="out"></pre>
 <script>
-(function(){
-'use strict';
-
-var enc = new TextEncoder();
-var CHUNK = 40000;
-var MAX_FILE = 2 * 1024 * 1024;
-var TYPES = {
-  html: { label: 'HTML', long: 'HTML (página completa)', run: true },
-  js:   { label: 'JS',   long: 'JavaScript',             run: true },
-  outro:{ label: 'TXT',  long: 'Outro (somente armazenar)', run: false }
+const _out = document.getElementById('out');
+const _origLog = console.log;
+const _fmt = (a) => {
+  if (typeof a === 'object' && a !== null) {
+    try { return JSON.stringify(a, null, 2); } catch(e) { return String(a); }
+  }
+  return String(a);
 };
-
-function $(s, r){ return (r || document).querySelector(s); }
-function h(tag, props){
-  var el = document.createElement(tag);
-  if (props) Object.keys(props).forEach(function(k){
-    var v = props[k];
-    if (k === 'class') el.className = v;
-    else if (k === 'text') el.textContent = v;
-    else if (k.indexOf('on') === 0) el.addEventListener(k.slice(2), v);
-    else if (v === true) el.setAttribute(k, '');
-    else if (v !== false && v != null) el.setAttribute(k, v);
-  });
-  for (var i = 2; i < arguments.length; i++){
-    var kids = [].concat(arguments[i]);
-    for (var j = 0; j < kids.length; j++){
-      var kid = kids[j];
-      if (kid == null || kid === false) continue;
-      el.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
-    }
-  }
-  return el;
+console.log = (...args) => { _out.textContent += args.map(_fmt).join(' ') + '\\n'; _origLog.apply(console, args); };
+console.error = (...args) => { _out.textContent += '❌ ' + args.map(_fmt).join(' ') + '\\n'; };
+console.warn = (...args) => { _out.textContent += '⚠️ ' + args.map(_fmt).join(' ') + '\\n'; };
+window.onerror = (msg, src, line) => { _out.textContent += '💥 ERRO (linha ' + line + '): ' + msg + '\\n'; return false; };
+try {
+${code}
+} catch(e) {
+  _out.textContent += '💥 ERRO: ' + e.message + '\\n';
 }
-function fmtBytes(n){
-  if (n < 1024) return n + ' B';
-  if (n < 1048576) return (n / 1024).toFixed(1).replace('.', ',') + ' KB';
-  return (n / 1048576).toFixed(2).replace('.', ',') + ' MB';
-}
-function uid(){ return 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
-function countLines(t){ var n = 1; for (var i = 0; i < t.length; i++) if (t.charCodeAt(i) === 10) n++; return n; }
-function norm(s){ return s.replace(/\r\n?/g, '\n'); }
-function errText(e){ return e && (e.code || e.message) ? (e.code || e.message) : 'erro desconhecido'; }
+<\/script>
+</body></html>`;
+            }
+            return code;
+        }
 
-async function sha256(str){
-  try {
-    if (!(window.crypto && crypto.subtle)) throw new Error('sem subtle');
-    var buf = await crypto.subtle.digest('SHA-256', enc.encode(str));
-    return Array.prototype.map.call(new Uint8Array(buf), function(b){ return b.toString(16).padStart(2, '0'); }).join('');
-  } catch (e) {
-    return 'len-' + str.length;
-  }
-}
-function splitChunks(text){
-  var out = [], i = 0;
-  while (i < text.length){
-    var end = Math.min(i + CHUNK, text.length);
-    if (end < text.length){
-      var c = text.charCodeAt(end - 1);
-      if (c >= 0xD800 && c <= 0xDBFF) end--;
-    }
-    out.push(text.slice(i, end));
-    i = end;
-  }
-  return out.length ? out : [''];
-}
-
-/* ---------- Armazenamento ---------- */
-function makeDbBackend(db){
-  var col = db.collection('codes');
-  function partRef(id, i){ return db.doc('codes/' + id + '/parts/p' + i); }
-  return {
-    kind: 'db',
-    subscribe: function(cb, err){
-      return col.onSnapshot(function(snap){
-        cb(snap.docs.map(function(d){ return Object.assign({}, d.data(), { id: d.id }); }));
-      }, err);
-    },
-    load: async function(meta){
-      var parts = [];
-      for (var i = 0; i < meta.chunks; i++){
-        var s = await partRef(meta.id, i).get();
-        if (!s.exists) throw new Error('parte ' + i + ' ausente');
-        parts.push(s.data().t);
-      }
-      return parts.join('');
-    },
-    save: async function(meta, text, oldChunks){
-      var parts = splitChunks(text);
-      for (var i = 0; i < parts.length; i++) await partRef(meta.id, i).set({ t: parts[i], i: i });
-      for (var k = parts.length; k < (oldChunks || 0); k++) await partRef(meta.id, k).delete();
-      await db.doc('codes/' + meta.id).set(meta);
-    },
-    patchMeta: async function(id, patch){ await db.doc('codes/' + id).update(patch); },
-    remove: async function(meta){
-      await db.doc('codes/' + meta.id).delete();
-      for (var i = 0; i < meta.chunks; i++) await partRef(meta.id, i).delete();
-    }
-  };
-}
-
-function makeLocalBackend(){
-  var IDX = 'gerenciador-codigos:v1:index';
-  var BODY = 'gerenciador-codigos:v1:body:';
-  var mem = {};
-  var volatile = false;
-  function get(k){ try { var v = localStorage.getItem(k); return v === null ? (k in mem ? mem[k] : null) : v; } catch (e) { volatile = true; return k in mem ? mem[k] : null; } }
-  function set(k, v){ try { localStorage.setItem(k, v); } catch (e) { volatile = true; mem[k] = v; } }
-  function del(k){ try { localStorage.removeItem(k); } catch (e) {} delete mem[k]; }
-  var listeners = [];
-  function readIndex(){ try { return JSON.parse(get(IDX) || '[]'); } catch (e) { return []; } }
-  function writeIndex(a){ set(IDX, JSON.stringify(a)); }
-  function emit(){ var a = readIndex(); listeners.forEach(function(f){ f(a); }); }
-  return {
-    kind: 'local',
-    isVolatile: function(){ return volatile; },
-    subscribe: function(cb){
-      listeners.push(cb); cb(readIndex());
-      return function(){ listeners = listeners.filter(function(f){ return f !== cb; }); };
-    },
-    load: async function(meta){
-      var t = get(BODY + meta.id);
-      if (t === null) throw new Error('conteúdo ausente');
-      return t;
-    },
-    save: async function(meta, text){
-      set(BODY + meta.id, text);
-      var a = readIndex().filter(function(x){ return x.id !== meta.id; });
-      a.push(meta); writeIndex(a); emit();
-    },
-    patchMeta: async function(id, patch){
-      writeIndex(readIndex().map(function(x){ return x.id === id ? Object.assign({}, x, patch) : x; }));
-      emit();
-    },
-    remove: async function(meta){
-      del(BODY + meta.id);
-      writeIndex(readIndex().filter(function(x){ return x.id !== meta.id; }));
-      emit();
-    }
-  };
-}
-
-/* ---------- Estado ---------- */
-var backend = null;
-var state = { items: [], selected: null };
-var detailToken = 0;
-var run = null;
-var tabsEl = $('#tabs');
-var panelEl = $('#panel');
-var storageEl = $('#storage');
-var detailRefs = null;
-
-function setPill(el, s, text){ el.dataset.s = s; el.textContent = text; }
-
-async function verifyStored(meta){
-  try {
-    var text = await backend.load(meta);
-    var hash = await sha256(text);
-    return { ok: hash === meta.sha256, text: text, hash: hash };
-  } catch (e) {
-    return { ok: false, text: null, hash: null, error: e };
-  }
-}
-function buildMeta(id, name, type, text, hash, createdAt){
-  return {
-    id: id, name: name, type: type, createdAt: createdAt,
-    chars: text.length, bytes: enc.encode(text).length, lines: countLines(text),
-    chunks: splitChunks(text).length, sha256: hash
-  };
-}
-
-/* ---------- Campo de entrada que preserva o texto original ---------- */
-function guessType(text, filename){
-  var f = (filename || '').toLowerCase();
-  if (/\.(html?|xhtml)$/.test(f)) return 'html';
-  if (/\.(m?js|cjs)$/.test(f)) return 'js';
-  if (f) return 'outro';
-  var t = text.trim();
-  if (/^<!doctype html|^<html|^<head|^<body/i.test(t)) return 'html';
-  if (/^<[a-z][\s\S]*>/i.test(t)) return 'html';
-  if (/\b(const|let|var|function)\b|=>|console\.|document\./.test(t)) return 'js';
-  return 'outro';
-}
-function makeCodeInput(prefix, onChange){
-  var raw = null;
-  var ta = h('textarea', {
-    id: prefix + '-text', spellcheck: 'false', autocomplete: 'off', autocapitalize: 'off', wrap: 'off',
-    placeholder: 'Cole o código aqui, exatamente como está.'
-  });
-  ta.addEventListener('paste', function(e){
-    var t = e.clipboardData && e.clipboardData.getData('text/plain');
-    var whole = ta.selectionStart === 0 && ta.selectionEnd === ta.value.length;
-    raw = (typeof t === 'string' && (ta.value === '' || whole)) ? t : null;
-  });
-  ta.addEventListener('input', function(){
-    if (raw !== null && norm(raw) !== ta.value) raw = null;
-    onChange(null);
-  });
-  var fileInput = h('input', { id: prefix + '-file', type: 'file', hidden: true, accept: '.html,.htm,.js,.mjs,.css,.json,.txt,.md,.py,.ts,.tsx,.jsx,.sh,.sql,.xml,.yml,.yaml,text/*' });
-  var msg = h('p', { class: 'status', 'aria-live': 'polite' });
-  async function readFile(file){
-    if (!file) return;
-    if (file.size > MAX_FILE){ setStatus(msg, 'Arquivo acima de 2 MB. Divida-o em códigos menores.', 'bad'); return; }
-    try {
-      var buf = await file.arrayBuffer();
-      var text = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true }).decode(buf);
-      ta.value = text; raw = text;
-      setStatus(msg, 'Arquivo "' + file.name + '" importado sem alterações.', 'ok');
-      onChange(file.name);
-    } catch (e) {
-      setStatus(msg, 'O arquivo não é UTF-8 válido. Para não alterar o conteúdo, ele não foi importado.', 'bad');
-    }
-  }
-  fileInput.addEventListener('change', function(){ readFile(fileInput.files[0]); fileInput.value = ''; });
-  var drop = h('div', { class: 'drop' },
-    h('span', { text: 'Ou arraste um arquivo aqui (até 2 MB, UTF-8).' }),
-    h('button', { class: 'btn', type: 'button', text: 'Importar arquivo', onclick: function(){ fileInput.click(); } }),
-    fileInput
-  );
-  ['dragenter', 'dragover'].forEach(function(n){ drop.addEventListener(n, function(e){ e.preventDefault(); drop.classList.add('over'); }); });
-  ['dragleave', 'drop'].forEach(function(n){ drop.addEventListener(n, function(e){ e.preventDefault(); drop.classList.remove('over'); }); });
-  drop.addEventListener('drop', function(e){ readFile(e.dataTransfer && e.dataTransfer.files[0]); });
-  return {
-    ta: ta, drop: drop, msg: msg,
-    getText: function(){ return raw !== null ? raw : ta.value; },
-    clear: function(){ ta.value = ''; raw = null; setStatus(msg, '', ''); }
-  };
-}
-function setStatus(el, text, s){ el.textContent = text; if (s) el.dataset.s = s; else delete el.dataset.s; }
-
-function typeSelect(id){
-  var sel = h('select', { id: id });
-  Object.keys(TYPES).forEach(function(k){ sel.append(h('option', { value: k, text: TYPES[k].long })); });
-  return sel;
-}
-
-/* ---------- Painel "Novo código" (criado uma vez e reaproveitado) ---------- */
-var newPane = (function(){
-  var typeTouched = false;
-  var nameInput = h('input', { id: 'new-name', type: 'text', autocomplete: 'off', placeholder: 'Ex.: Calculadora de frete' });
-  var sel = typeSelect('new-type');
-  sel.value = 'outro';
-  sel.addEventListener('change', function(){ typeTouched = true; });
-  var counter = h('p', { class: 'hint', text: 'Nada colado ainda.' });
-  var intro = h('p', { class: 'intro', text: 'Nenhum código guardado ainda. Cole o primeiro abaixo. Ele vira uma aba própria e fica exatamente como você enviou.' });
-  var status = h('p', { class: 'status', 'aria-live': 'polite' });
-  var input = makeCodeInput('new', function(filename){
-    var t = input.getText();
-    counter.textContent = t ? countLines(t) + ' linhas · ' + fmtBytes(enc.encode(t).length) : 'Nada colado ainda.';
-    if (!typeTouched && t) sel.value = guessType(t, filename);
-    if (filename && !nameInput.value.trim()) nameInput.value = filename;
-  });
-  var saveBtn = h('button', { class: 'btn primary', type: 'button', text: 'Armazenar código' });
-  saveBtn.addEventListener('click', async function(){
-    var text = input.getText();
-    if (!text.trim()){ setStatus(status, 'Cole um código ou importe um arquivo antes de armazenar.', 'bad'); return; }
-    saveBtn.disabled = true; setStatus(status, 'Armazenando e verificando…', '');
-    try {
-      var id = uid();
-      var name = nameInput.value.trim() || ('Código ' + (state.items.length + 1));
-      var hash = await sha256(text);
-      var meta = buildMeta(id, name, sel.value, text, hash, Date.now());
-      await backend.save(meta, text, 0);
-      var v = await verifyStored(meta);
-      if (!v.ok) throw new Error('o conteúdo lido de volta não confere com o selo');
-      nameInput.value = ''; input.clear(); typeTouched = false; sel.value = 'outro';
-      counter.textContent = 'Nada colado ainda.';
-      setStatus(status, '', '');
-      state.items = state.items.filter(function(x){ return x.id !== id; }).concat([meta]);
-      select(id);
-    } catch (e) {
-      var q = e && e.code === 'quota_exceeded';
-      setStatus(status, q ? 'O armazenamento está cheio. Exclua algum código para liberar espaço.' : 'Não foi possível armazenar (' + errText(e) + '). O código continua no campo; tente de novo.', 'bad');
-    } finally { saveBtn.disabled = false; }
-  });
-  var root = h('div', { class: 'newpane', style: 'display:flex;flex-direction:column;gap:14px' },
-    h('div', { class: 'd-head' }, h('h2', { class: 'd-title', text: 'Novo código' }), h('p', { class: 'd-sub', text: 'Cada envio cria uma aba independente. Os códigos existentes não são tocados.' })),
-    intro,
-    h('div', { class: 'formgrid' },
-      h('div', { class: 'field' }, h('label', { for: 'new-name', text: 'Nome da aba' }), nameInput),
-      h('div', { class: 'field' }, h('label', { for: 'new-type', text: 'Tipo' }), sel)
-    ),
-    h('div', { class: 'field' }, h('label', { for: 'new-text', text: 'Código original' }), input.ta, counter),
-    input.drop, input.msg,
-    h('div', { class: 'row' }, saveBtn), status
-  );
-  root.introEl = intro;
-  return root;
-})();
-
-/* ---------- Abas ---------- */
-function renderTabs(){
-  tabsEl.replaceChildren();
-  state.items.forEach(function(m){
-    var t = TYPES[m.type] || TYPES.outro;
-    tabsEl.append(h('button', {
-      class: 'tab', role: 'tab', type: 'button', 'aria-selected': String(state.selected === m.id),
-      onclick: function(){ select(m.id); }
-    }, h('span', { class: 'tab-name', text: m.name }), h('span', { class: 'tab-meta', text: t.label + ' · ' + fmtBytes(m.bytes) })));
-  });
-  tabsEl.append(h('button', {
-    class: 'tab tab-new', role: 'tab', type: 'button', 'aria-selected': String(state.selected === 'new'),
-    onclick: function(){ select('new'); }
-  }, h('span', { class: 'tab-name', text: '+ Novo código' }), h('span', { class: 'tab-meta', text: 'Cadastrar' })));
-  newPane.introEl.hidden = state.items.length > 0;
-}
-
-function select(id){
-  state.selected = id;
-  stopRun(false);
-  renderTabs();
-  renderPanel();
-}
-function renderPanel(){
-  detailToken++;
-  detailRefs = null;
-  if (state.selected === 'new'){ panelEl.replaceChildren(newPane); return; }
-  var meta = state.items.find(function(x){ return x.id === state.selected; });
-  if (!meta){
-    state.selected = state.items.length ? state.items[0].id : 'new';
-    renderTabs();
-    if (state.selected === 'new'){ panelEl.replaceChildren(newPane); return; }
-    meta = state.items[0];
-  }
-  showDetail(meta);
-}
-
-/* ---------- Execução isolada ---------- */
-var BRIDGE = '<script>(function(){var p=function(t,a){try{parent.postMessage({__gc:1,t:t,a:a},"*")}catch(e){}};var f=function(x){try{if(typeof x==="string")return x;if(x instanceof Error)return x.stack||String(x);return JSON.stringify(x)}catch(e){return String(x)}};["log","info","warn","error","debug"].forEach(function(k){var o=console[k];console[k]=function(){p(k,[].map.call(arguments,f));try{o.apply(console,arguments)}catch(e){}}});window.addEventListener("error",function(e){p("error",[e.message+(e.lineno?" (linha "+e.lineno+")":"")])});window.addEventListener("unhandledrejection",function(e){p("error",["Promise rejeitada: "+f(e.reason)])})})();<\/script>';
-function buildDoc(text, type){
-  if (type === 'html') return text;
-  return '<!doctype html><html><head><meta charset="utf-8"></head><body>' + BRIDGE + '<script>' + text + '\n<\/script></body></html>';
-}
-function stopRun(){
-  if (run){ try { run.frame.remove(); } catch (e) {} run = null; }
-}
-window.addEventListener('message', function(e){
-  if (!run || e.source !== run.frame.contentWindow) return;
-  var d = e.data;
-  if (!d || d.__gc !== 1 || !run.log) return;
-  run.log(String(d.t), Array.isArray(d.a) ? d.a.map(String).join(' ') : '');
-});
-
-/* ---------- Gaveta aberta ---------- */
-async function copyText(text, btn, fallbackNode){
-  var orig = btn.textContent;
-  try { await navigator.clipboard.writeText(text); btn.textContent = 'Copiado'; }
-  catch (e) {
-    btn.textContent = 'Selecionado: use Ctrl+C';
-    try { var r = document.createRange(); r.selectNodeContents(fallbackNode); var s = getSelection(); s.removeAllRanges(); s.addRange(r); } catch (e2) {}
-  }
-  setTimeout(function(){ btn.textContent = orig; }, 2000);
-}
-
-async function showDetail(meta){
-  var token = ++detailToken;
-  var t = TYPES[meta.type] || TYPES.outro;
-  var title = h('h2', { class: 'd-title', text: meta.name });
-  var sub = h('p', { class: 'd-sub' }, meta.lines + ' linhas · ' + fmtBytes(meta.bytes) + ' · ', h('span', { class: 'mono', title: meta.sha256, text: 'SHA-256 ' + meta.sha256.slice(0, 12) + '…' }));
-  var integ = h('span', { class: 'pill', 'data-s': 'warn', text: 'Verificando…' });
-  var codeEl = h('pre', { class: 'code', text: '' });
-  var gutter = h('pre', { class: 'gutter', 'aria-hidden': 'true', text: '' });
-  var codeWrap = h('div', { class: 'codewrap' }, gutter, codeEl);
-  var currentText = null;
-
-  function applyVerify(v){
-    if (v.error && v.text === null){
-      integ.dataset.s = 'bad'; integ.textContent = 'Não foi possível ler o conteúdo';
-      codeEl.textContent = 'Falha ao ler o conteúdo armazenado (' + errText(v.error) + ').';
-      gutter.textContent = '';
-      return;
-    }
-    currentText = v.text;
-    codeEl.textContent = v.text;
-    gutter.textContent = Array.from({ length: countLines(v.text) }, function(_, i){ return i + 1; }).join('\n');
-    if (v.ok){ integ.dataset.s = 'ok'; integ.textContent = 'Íntegro'; }
-    else { integ.dataset.s = 'bad'; integ.textContent = 'Divergente do selo'; }
-  }
-
-  var verifyBtn = h('button', { class: 'btn', type: 'button', text: 'Verificar agora', onclick: async function(){
-    integ.dataset.s = 'warn'; integ.textContent = 'Verificando…';
-    var v = await verifyStored(meta);
-    if (token === detailToken) applyVerify(v);
-  } });
-  var copyBtn = h('button', { class: 'btn', type: 'button', text: 'Copiar código', onclick: function(){ if (currentText !== null) copyText(currentText, copyBtn, codeEl); } });
-  var runBtn = h('button', { class: 'btn primary', type: 'button', text: 'Executar', disabled: !t.run });
-  var renameBtn = h('button', { class: 'btn', type: 'button', text: 'Renomear aba' });
-  var replaceBtn = h('button', { class: 'btn', type: 'button', text: 'Substituir conteúdo' });
-  var delBtn = h('button', { class: 'btn danger', type: 'button', text: 'Excluir' });
-  var actionMsg = h('p', { class: 'status', 'aria-live': 'polite' });
-
-  /* renomear (altera só o nome da aba) */
-  var renameInput = h('input', { id: 'rename-' + meta.id, type: 'text', value: meta.name, autocomplete: 'off', 'aria-label': 'Novo nome da aba' });
-  var renameRow = h('div', { class: 'row', hidden: true },
-    h('div', { style: 'flex:1 1 220px;min-width:0' }, renameInput),
-    h('button', { class: 'btn primary', type: 'button', text: 'Salvar nome', onclick: async function(){
-      var nn = renameInput.value.trim();
-      if (!nn) return;
-      try { await backend.patchMeta(meta.id, { name: nn }); meta.name = nn; title.textContent = nn; renameRow.hidden = true; setStatus(actionMsg, 'Nome da aba atualizado. O código não foi tocado.', 'ok'); }
-      catch (e) { setStatus(actionMsg, 'Não foi possível renomear (' + errText(e) + ').', 'bad'); }
-    } }),
-    h('button', { class: 'btn', type: 'button', text: 'Cancelar', onclick: function(){ renameRow.hidden = true; } })
-  );
-  renameBtn.addEventListener('click', function(){ renameRow.hidden = !renameRow.hidden; if (!renameRow.hidden){ renameInput.value = meta.name; renameInput.focus(); } });
-
-  /* substituir (única forma de alterar um código guardado) */
-  var repInput = makeCodeInput('rep', function(){});
-  var repStatus = h('p', { class: 'status', 'aria-live': 'polite' });
-  var repBox = h('div', { class: 'runpanel', hidden: true, style: 'padding:12px;gap:10px' },
-    h('p', { class: 'hint', text: 'Isto troca o conteúdo guardado desta aba por um novo. Use somente se você pediu essa alteração. Os outros códigos não são afetados.' }),
-    repInput.ta, repInput.drop, repInput.msg,
-    h('div', { class: 'row' },
-      h('button', { class: 'btn primary', type: 'button', text: 'Confirmar substituição', onclick: async function(ev){
-        var text = repInput.getText();
-        if (!text.trim()){ setStatus(repStatus, 'Cole o novo conteúdo ou importe um arquivo.', 'bad'); return; }
-        var b = ev.currentTarget; b.disabled = true; setStatus(repStatus, 'Substituindo e verificando…', '');
-        try {
-          var hash = await sha256(text);
-          var nm = Object.assign(buildMeta(meta.id, meta.name, meta.type, text, hash, meta.createdAt), { updatedAt: Date.now() });
-          await backend.save(nm, text, meta.chunks);
-          var v = await verifyStored(nm);
-          if (!v.ok) throw new Error('o conteúdo lido de volta não confere com o selo');
-          state.items = state.items.map(function(x){ return x.id === nm.id ? nm : x; });
-          renderTabs(); stopRun(); showDetail(nm);
-        } catch (e) { setStatus(repStatus, 'Não foi possível substituir (' + errText(e) + '). O conteúdo anterior pode ter sido mantido; use "Verificar agora".', 'bad'); }
-        finally { b.disabled = false; }
-      } }),
-      h('button', { class: 'btn', type: 'button', text: 'Cancelar', onclick: function(){ repBox.hidden = true; repInput.clear(); } })
-    ),
-    repStatus
-  );
-  replaceBtn.addEventListener('click', function(){ repBox.hidden = !repBox.hidden; if (!repBox.hidden) repInput.ta.focus(); });
-
-  /* excluir (duas etapas) */
-  var armTimer = null;
-  delBtn.addEventListener('click', async function(){
-    if (!delBtn.classList.contains('armed')){
-      delBtn.classList.add('armed'); delBtn.textContent = 'Confirmar exclusão';
-      armTimer = setTimeout(function(){ delBtn.classList.remove('armed'); delBtn.textContent = 'Excluir'; }, 5000);
-      return;
-    }
-    clearTimeout(armTimer); delBtn.disabled = true;
-    try {
-      await backend.remove(meta);
-      state.items = state.items.filter(function(x){ return x.id !== meta.id; });
-      select(state.items.length ? state.items[0].id : 'new');
-    } catch (e) { delBtn.disabled = false; delBtn.classList.remove('armed'); delBtn.textContent = 'Excluir'; setStatus(actionMsg, 'Não foi possível excluir (' + errText(e) + ').', 'bad'); }
-  });
-
-  /* execução */
-  var before = h('span', { class: 'pill', 'data-s': 'warn', text: 'Antes: —' });
-  var after = h('span', { class: 'pill', 'data-s': 'warn', text: 'Depois: —' });
-  var runState = h('span', { class: 'hint', text: '' });
-  var frameHost = h('div');
-  var consoleBox = h('div', { class: 'console', hidden: true });
-  var stopBtn = h('button', { class: 'btn', type: 'button', text: 'Parar' });
-  var runPanel = h('div', { class: 'runpanel', hidden: true },
-    h('div', { class: 'runbar' }, h('div', { class: 'row' }, before, after, runState), h('div', { class: 'row' }, stopBtn)),
-    frameHost, consoleBox
-  );
-  var afterDone = true;
-  async function afterCheck(startMeta, baseText){
-    if (afterDone) return; afterDone = true;
-    var v = await verifyStored(startMeta);
-    var same = v.ok && v.text === baseText;
-    setPill(after, same ? 'ok' : 'bad', same ? 'Depois: íntegro' : 'Depois: divergente');
-  }
-  async function execute(){
-    runBtn.disabled = true;
-    try {
-      stopRun(); runPanel.hidden = false; consoleBox.replaceChildren(); frameHost.replaceChildren();
-      setPill(before, 'warn', 'Antes: verificando…'); setPill(after, 'warn', 'Depois: —'); runState.textContent = '';
-      var v = await verifyStored(meta);
-      if (token !== detailToken) return;
-      if (!v.ok){
-        setPill(before, 'bad', 'Antes: divergente');
-        runState.textContent = 'Execução bloqueada: o conteúdo guardado não confere com o selo SHA-256.';
-        return;
-      }
-      setPill(before, 'ok', 'Antes: íntegro');
-      var baseText = v.text;
-      var frame = h('iframe', { class: 'runframe', sandbox: 'allow-scripts allow-forms allow-modals', title: 'Execução isolada de ' + meta.name });
-      afterDone = false;
-      frame.addEventListener('load', function(){ afterCheck(meta, baseText); }, { once: true });
-      var isJs = meta.type === 'js';
-      consoleBox.hidden = !isJs;
-      if (isJs) consoleBox.append(h('div', { class: 'none', text: 'Saída do console (somente JavaScript).' }));
-      var lines = 0;
-      run = { frame: frame, log: function(level, msg){
-        if (!isJs || lines > 500) return;
-        lines++;
-        consoleBox.append(h('div', { class: level === 'error' ? 'error' : (level === 'warn' ? 'warn' : ''), text: msg }));
-        consoleBox.scrollTop = consoleBox.scrollHeight;
-      } };
-      run.baseText = baseText;
-      frame.srcdoc = buildDoc(baseText, meta.type);
-      frameHost.append(frame);
-      runState.textContent = 'Em execução num quadro isolado.';
-    } finally { runBtn.disabled = !t.run; }
-  }
-  runBtn.addEventListener('click', execute);
-  stopBtn.addEventListener('click', async function(){
-    var base = run && run.baseText;
-    stopRun(); frameHost.replaceChildren(); runState.textContent = 'Execução encerrada.';
-    if (base != null){ afterDone = false; await afterCheck(meta, base); }
-  });
-
-  var panel = h('div', { style: 'display:flex;flex-direction:column;gap:14px;min-width:0' },
-    h('div', { class: 'd-head' }, h('div', { class: 'd-titlerow' }, title, h('span', { class: 'badge', text: t.label }), integ), sub),
-    h('div', { class: 'row' }, runBtn, copyBtn, verifyBtn, renameBtn, replaceBtn, delBtn),
-    renameRow, repBox, actionMsg,
-    codeWrap,
-    runPanel
-  );
-  detailRefs = { id: meta.id, sha: meta.sha256, type: meta.type, title: title };
-  panelEl.replaceChildren(panel);
-
-  var v = await verifyStored(meta);
-  if (token === detailToken) applyVerify(v);
-}
-
-/* ---------- Início ---------- */
-function onItems(list){
-  list.sort(function(a, b){ return (a.createdAt || 0) - (b.createdAt || 0); });
-  var prev = state.items;
-  state.items = list;
-  if (state.selected === null){
-    state.selected = list.length ? list[0].id : 'new';
-    renderTabs(); renderPanel(); return;
-  }
-  renderTabs();
-  if (state.selected === 'new') return;
-  var cur = list.find(function(x){ return x.id === state.selected; });
-  if (!cur){ select(list.length ? list[0].id : 'new'); return; }
-  if (detailRefs && detailRefs.id === cur.id && detailRefs.sha === cur.sha256 && detailRefs.type === cur.type){
-    detailRefs.title.textContent = cur.name;
-  } else if (!detailRefs || detailRefs.id !== cur.id || detailRefs.sha !== cur.sha256 || detailRefs.type !== cur.type){
-    var wasKnown = prev.some(function(x){ return x.id === cur.id && x.sha256 === cur.sha256 && x.type === cur.type; });
-    if (!wasKnown || !detailRefs){ stopRun(); showDetail(cur); }
-  }
-}
-
-async function boot(){
-  renderTabs();
-  panelEl.replaceChildren(h('p', { class: 'hint', text: 'Conectando ao armazenamento…' }));
-  var api = null;
-  try { api = (window.claude && window.claude.use) ? await window.claude.use('db') : null; } catch (e) { api = null; }
-  if (api){
-    backend = makeDbBackend(api);
-    setPill(storageEl, 'ok', 'Armazenamento persistente');
-    backend.subscribe(onItems, function(err){
-      setPill(storageEl, 'bad', 'Armazenamento indisponível (' + errText(err) + ')');
-    });
-  } else {
-    backend = makeLocalBackend();
-    backend.subscribe(onItems);
-    setPill(storageEl, 'warn', backend.isVolatile() ? 'Só nesta sessão' : 'Somente neste navegador');
-  }
-}
-boot();
-})();
-</script>
-
-</body></html>
+        // === Inicialização ===
+        updateSavedBadge();
+    </script>
+</body>
+</html>
