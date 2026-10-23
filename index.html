@@ -338,6 +338,14 @@ h1{font-size:1.15rem;font-weight:700;display:flex;align-items:center;gap:10px;le
 <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.15.1/beautify-css.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.15.1/beautify-html.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<!-- Bibliotecas para as ferramentas extras -->
+<script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/turndown/7.1.2/turndown.min.js"></script>
+<!-- Bibliotecas para Dev Tools -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+<script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+
 <script>
 /* ==== FIBRAS DE FUNDO ==== */
 (function initFibers() {
@@ -998,8 +1006,13 @@ input:focus, textarea:focus, select:focus { border-color: #00d4ff; }
 label { display: block; margin-bottom: 6px; font-size: 14px; color: #b0b8c8; }
 p { line-height: 1.6; }
 a { color: #00d4ff; }
-${extraHead}
+button { background: linear-gradient(135deg, #00d4ff, #6366f1); color: #fff; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: 600; font-family: inherit; transition: 0.2s; }
+button:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(0, 212, 255, 0.4); }
+table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+th, td { padding: 8px 12px; border: 1px solid rgba(0, 212, 255, 0.3); text-align: left; }
+th { background: rgba(0, 212, 255, 0.1); color: #00d4ff; }
 </style>
+${extraHead}
 </head>
 <body>
 <div class="demo">
@@ -1011,7 +1024,8 @@ ${body}
 }
 
 const generators = {
-    button: wrapHtml('Button', `<button onclick="alert('Botão clicado!')" style="background: linear-gradient(135deg, #00d4ff, #6366f1); color: #fff; border: none; padding: 12px 28px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 15px; box-shadow: 0 4px 16px rgba(0, 212, 255, 0.4);">Clique em mim</button>`),
+    /* === FORMULÁRIOS === */
+    button: wrapHtml('Button', `<button onclick="alert('Botão clicado!')">Clique em mim</button>`),
     checkbox: wrapHtml('Checkbox', `<label style="display: flex; gap: 10px; align-items: center; cursor: pointer; font-size: 15px;"><input type="checkbox" checked style="width: 20px; height: 20px; accent-color: #00d4ff; cursor: pointer;"> Aceito os termos e condições</label>`),
     radio: wrapHtml('Radio Button', `<fieldset style="border: 1px solid rgba(0, 212, 255, 0.3); padding: 16px; border-radius: 10px; margin: 0;"><legend style="padding: 0 8px; color: #00d4ff; font-weight: 600;">Escolha uma cor:</legend><label style="display: flex; gap: 10px; align-items: center; cursor: pointer; padding: 6px 0;"><input type="radio" name="cor" value="azul" checked style="accent-color: #00d4ff;"> Azul</label><label style="display: flex; gap: 10px; align-items: center; cursor: pointer; padding: 6px 0;"><input type="radio" name="cor" value="verde" style="accent-color: #00d4ff;"> Verde</label><label style="display: flex; gap: 10px; align-items: center; cursor: pointer; padding: 6px 0;"><input type="radio" name="cor" value="vermelho" style="accent-color: #00d4ff;"> Vermelho</label></fieldset>`),
     email: wrapHtml('Email Input', `<label>Email:</label><input type="email" placeholder="voce@exemplo.com" required><p style="font-size: 12px; color: #888; margin: 8px 0 0;">O navegador valida automaticamente o formato.</p>`),
@@ -1023,12 +1037,13 @@ const generators = {
     password: wrapHtml('Password Input', `<label>Senha:</label><input type="password" placeholder="Digite sua senha">`),
     range: wrapHtml('Range Input', `<label>Volume: <span id="range-val" style="color: #00d4ff; font-weight: 700;">50</span></label><input type="range" min="0" max="100" value="50" oninput="document.getElementById('range-val').textContent = this.value" style="width: 100%; accent-color: #00d4ff; cursor: pointer;">`),
     search: wrapHtml('Search Input', `<label>Buscar:</label><input type="search" placeholder="Digite para buscar...">`),
-    submit: wrapHtml('Submit Input', `<form onsubmit="event.preventDefault(); alert('Formulário enviado!');"><label>Nome:</label><input type="text" name="nome" required style="margin-bottom: 12px;"><input type="submit" value="Enviar Formulário" style="background: linear-gradient(135deg, #00d4ff, #6366f1); color: #fff; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 15px; box-shadow: 0 4px 16px rgba(0, 212, 255, 0.4);"></form>`),
+    submit: wrapHtml('Submit Input', `<form onsubmit="event.preventDefault(); alert('Formulário enviado!');"><label>Nome:</label><input type="text" name="nome" required style="margin-bottom: 12px;"><input type="submit" value="Enviar Formulário"></form>`),
     tel: wrapHtml('Telephone Input', `<label>Telefone:</label><input type="tel" placeholder="(11) 99999-9999" pattern="[0-9]{2}[0-9]{5}[0-9]{4}"><p style="font-size: 12px; color: #888; margin: 8px 0 0;">Aceita apenas números (padrão brasileiro).</p>`),
     text: wrapHtml('Text Input', `<label>Nome:</label><input type="text" placeholder="Digite seu nome">`),
     textarea: wrapHtml('Textarea', `<label>Mensagem:</label><textarea rows="5" placeholder="Digite sua mensagem..."></textarea>`),
     url: wrapHtml('URL Input', `<label>URL:</label><input type="url" placeholder="https://exemplo.com">`),
 
+    /* === MÍDIA === */
     audio: wrapHtml('Audio — Upload & Base64', `
 <div style="display:flex;flex-direction:column;gap:16px;">
   <label style="display:flex;flex-direction:column;gap:8px;cursor:pointer;">
@@ -1042,7 +1057,7 @@ const generators = {
     <div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px;flex-wrap:wrap;">
         <span style="font-size:13px;color:#b0b8c8;">📝 Código HTML gerado:</span>
-        <button onclick="copyAudioCode()" id="copy-audio-btn" style="background:rgba(0,212,255,0.15);color:#00d4ff;border:1px solid rgba(0,212,255,0.3);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;">📋 Copiar código</button>
+        <button onclick="copyAudioCode()" id="copy-audio-btn" style="padding:5px 12px;font-size:12px;">📋 Copiar código</button>
       </div>
       <textarea id="audio-code" rows="5" readonly style="width:100%;padding:10px;font-family:'JetBrains Mono',monospace;font-size:11px;background:rgba(7,11,20,0.85);color:#22c55e;border:1px solid rgba(0,212,255,0.2);border-radius:8px;resize:vertical;word-break:break-all;box-sizing:border-box;"></textarea>
       <p id="audio-size" style="font-size:12px;color:#888;margin:8px 0 0;"></p>
@@ -1095,7 +1110,7 @@ const generators = {
     <div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px;flex-wrap:wrap;">
         <span style="font-size:13px;color:#b0b8c8;">📝 Código HTML gerado:</span>
-        <button onclick="copyImgCode()" id="copy-img-btn" style="background:rgba(0,212,255,0.15);color:#00d4ff;border:1px solid rgba(0,212,255,0.3);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;">📋 Copiar código</button>
+        <button onclick="copyImgCode()" id="copy-img-btn" style="padding:5px 12px;font-size:12px;">📋 Copiar código</button>
       </div>
       <textarea id="img-code" rows="6" readonly style="width:100%;padding:10px;font-family:'JetBrains Mono',monospace;font-size:11px;background:rgba(7,11,20,0.85);color:#22c55e;border:1px solid rgba(0,212,255,0.2);border-radius:8px;resize:vertical;word-break:break-all;box-sizing:border-box;"></textarea>
       <p id="img-size" style="font-size:12px;color:#888;margin:8px 0 0;"></p>
@@ -1146,7 +1161,7 @@ const generators = {
     <div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px;flex-wrap:wrap;">
         <span style="font-size:13px;color:#b0b8c8;">📝 Código HTML gerado:</span>
-        <button onclick="copyVideoCode()" id="copy-video-btn" style="background:rgba(0,212,255,0.15);color:#00d4ff;border:1px solid rgba(0,212,255,0.3);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;">📋 Copiar código</button>
+        <button onclick="copyVideoCode()" id="copy-video-btn" style="padding:5px 12px;font-size:12px;">📋 Copiar código</button>
       </div>
       <textarea id="video-code" rows="5" readonly style="width:100%;padding:10px;font-family:'JetBrains Mono',monospace;font-size:11px;background:rgba(7,11,20,0.85);color:#22c55e;border:1px solid rgba(0,212,255,0.2);border-radius:8px;resize:vertical;word-break:break-all;box-sizing:border-box;"></textarea>
       <p id="video-size" style="font-size:12px;color:#888;margin:8px 0 0;"></p>
@@ -1188,6 +1203,7 @@ const generators = {
 
     iframe: wrapHtml('iFrame', `<iframe srcdoc="<body style='font-family:sans-serif;background:#f0f4f8;margin:0;padding:20px'><h3 style='color:#0066cc;margin-top:0'>Olá do iframe!</h3><p>Este conteúdo está dentro de um iframe.</p></body>" width="100%" height="180" style="border: 1px solid rgba(0, 212, 255, 0.3); border-radius: 10px;" title="Exemplo"></iframe>`),
 
+    /* === TEXTO === */
     bdo: wrapHtml('BDO Tag', `<p>Texto normal: Olá Mundo</p><p>Com <strong>&lt;bdo dir="rtl"&gt;</strong>: <bdo dir="rtl" style="color: #00d4ff; font-weight: 600;">Olá Mundo</bdo></p>`),
     code: wrapHtml('Code Tag', `<p>Use <code style="background: rgba(0, 212, 255, 0.15); color: #00d4ff; padding: 3px 8px; border-radius: 4px; font-family: monospace;">console.log()</code> para depurar.</p><p>Exemplo: <code style="background: rgba(168, 85, 247, 0.15); color: #a855f7; padding: 3px 8px; border-radius: 4px; font-family: monospace;">npm install</code></p>`),
     cite: wrapHtml('Cite Tag', `<p>O livro <cite style="color: #00d4ff; font-style: italic;">Dom Casmurro</cite> foi escrito por Machado de Assis.</p>`),
@@ -1201,12 +1217,430 @@ const generators = {
     hyperlink: wrapHtml('Hyperlink', `<p>Visite o <a href="https://developer.mozilla.org" target="_blank" style="color: #00d4ff; text-decoration: none; border-bottom: 1px solid #00d4ff;">MDN Web Docs</a> para aprender mais.</p><p>Ou envie um <a href="mailto:contato@exemplo.com" style="color: #a855f7;">email</a>.</p>`),
     list: wrapHtml('List Tags', `<h4 style="color: #00d4ff; margin: 0 0 8px;">Lista não ordenada:</h4><ul style="margin: 0 0 20px; padding-left: 20px;"><li>Maçã</li><li>Banana</li><li>Laranja</li></ul><h4 style="color: #00d4ff; margin: 0 0 8px;">Lista ordenada:</h4><ol style="margin: 0; padding-left: 20px;"><li>Primeiro</li><li>Segundo</li><li>Terceiro</li></ol>`),
 
+    /* === INTERATIVOS === */
     details: wrapHtml('Details', `<details style="background: rgba(0, 212, 255, 0.05); padding: 14px 18px; border-radius: 10px; border: 1px solid rgba(0, 212, 255, 0.2);"><summary style="cursor: pointer; font-weight: 600; color: #00d4ff;">Clique para expandir</summary><p style="margin: 12px 0 0;">Este é o conteúdo que estava escondido!</p></details>`),
-    dialog: wrapHtml('Dialog', `<button onclick="document.getElementById('myDialog').showModal()" style="background: linear-gradient(135deg, #00d4ff, #6366f1); color: #fff; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 15px;">Abrir Diálogo</button><dialog id="myDialog" style="background: #141a2e; color: #e4e7eb; border: 1px solid rgba(0, 212, 255, 0.4); border-radius: 12px; padding: 24px; max-width: 400px;"><h3 style="margin: 0 0 12px; color: #00d4ff;">Olá!</h3><p style="margin: 0 0 16px;">Este é um diálogo nativo do HTML.</p><button onclick="document.getElementById('myDialog').close()" style="background: #ef4444; color: #fff; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600;">Fechar</button></dialog>`),
+    dialog: wrapHtml('Dialog', `<button onclick="document.getElementById('myDialog').showModal()">Abrir Diálogo</button><dialog id="myDialog" style="background: #141a2e; color: #e4e7eb; border: 1px solid rgba(0, 212, 255, 0.4); border-radius: 12px; padding: 24px; max-width: 400px;"><h3 style="margin: 0 0 12px; color: #00d4ff;">Olá!</h3><p style="margin: 0 0 16px;">Este é um diálogo nativo do HTML.</p><button onclick="document.getElementById('myDialog').close()" style="background: #ef4444;">Fechar</button></dialog>`),
 
-    table: wrapHtml('Table', `<table style="width: 100%; border-collapse: collapse; font-size: 14px;"><thead><tr style="background: rgba(0, 212, 255, 0.15);"><th style="padding: 10px; border: 1px solid rgba(0, 212, 255, 0.3); text-align: left;">Nome</th><th style="padding: 10px; border: 1px solid rgba(0, 212, 255, 0.3); text-align: left;">Idade</th><th style="padding: 10px; border: 1px solid rgba(0, 212, 255, 0.3); text-align: left;">Cidade</th></tr></thead><tbody><tr><td style="padding: 10px; border: 1px solid rgba(0, 212, 255, 0.2);">Ana</td><td style="padding: 10px; border: 1px solid rgba(0, 212, 255, 0.2);">28</td><td style="padding: 10px; border: 1px solid rgba(0, 212, 255, 0.2);">São Paulo</td></tr><tr><td style="padding: 10px; border: 1px solid rgba(0, 212, 255, 0.2);">Bruno</td><td style="padding: 10px; border: 1px solid rgba(0, 212, 255, 0.2);">34</td><td style="padding: 10px; border: 1px solid rgba(0, 212, 255, 0.2);">Rio de Janeiro</td></tr><tr><td style="padding: 10px; border: 1px solid rgba(0, 212, 255, 0.2);">Carla</td><td style="padding: 10px; border: 1px solid rgba(0, 212, 255, 0.2);">22</td><td style="padding: 10px; border: 1px solid rgba(0, 212, 255, 0.2);">Belo Horizonte</td></tr></tbody></table>`),
+    /* === DADOS === */
+    table: wrapHtml('Table', `<table><thead><tr><th>Nome</th><th>Idade</th><th>Cidade</th></tr></thead><tbody><tr><td>Ana</td><td>28</td><td>São Paulo</td></tr><tr><td>Bruno</td><td>34</td><td>Rio de Janeiro</td></tr><tr><td>Carla</td><td>22</td><td>Belo Horizonte</td></tr></tbody></table>`),
     meter: wrapHtml('Meter Tag', `<label>Uso de disco: 70%</label><meter value="70" min="0" max="100" low="40" high="80" optimum="20" style="width: 100%; height: 26px;"></meter>`),
     progress: wrapHtml('Progress Tag', `<label>Progresso: 65%</label><progress value="65" max="100" style="width: 100%; height: 26px; accent-color: #00d4ff;"></progress><p style="font-size: 13px; color: #888; margin: 16px 0 6px;">Barra indeterminada:</p><progress style="width: 100%; height: 26px; accent-color: #a855f7;"></progress>`),
+
+    /* === FERRAMENTAS EXTRAS === */
+    'color-palette': wrapHtml('Paleta de Cores', `
+<div style="display:flex;flex-direction:column;gap:16px;">
+  <button onclick="generateColors()" style="margin-bottom:10px;">🎨 Gerar Novas Cores</button>
+  <div id="colors-container" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;height:150px;"></div>
+  <p style="font-size:12px;color:#888;text-align:center;">Clique em uma cor para copiar o código HEX.</p>
+</div>
+<script>
+function generateColors() {
+  const container = document.getElementById('colors-container');
+  container.innerHTML = '';
+  for(let i=0; i<5; i++) {
+    const hex = '#' + Math.floor(Math.random()*16777215).toString(16).padStart(6, '0');
+    const div = document.createElement('div');
+    div.style.cssText = 'background:' + hex + ';border-radius:8px;display:flex;align-items:flex-end;justify-content:center;padding-bottom:10px;cursor:pointer;transition:transform 0.2s;';
+    div.innerHTML = '<span style="background:rgba(0,0,0,0.6);color:#fff;padding:4px 8px;border-radius:4px;font-size:12px;font-family:monospace;">' + hex + '</span>';
+    div.onclick = () => {
+      navigator.clipboard.writeText(hex);
+      const span = div.querySelector('span');
+      const orig = span.textContent;
+      span.textContent = '✓ Copiado!';
+      setTimeout(() => span.textContent = orig, 1000);
+    };
+    div.onmouseover = () => div.style.transform = 'scale(1.05)';
+    div.onmouseout = () => div.style.transform = 'scale(1)';
+    container.appendChild(div);
+  }
+}
+generateColors();
+<\/script>
+`),
+
+    'yaml-json': wrapHtml('YAML ⇄ JSON', `
+<div style="display:flex;flex-direction:column;gap:16px;">
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+    <div>
+      <label>YAML:</label>
+      <textarea id="yaml-input" rows="8" placeholder="cole yaml aqui..."></textarea>
+    </div>
+    <div>
+      <label>JSON:</label>
+      <textarea id="json-input" rows="8" placeholder="cole json aqui..."></textarea>
+    </div>
+  </div>
+  <div style="display:flex;gap:10px;">
+    <button onclick="yamlToJson()" style="flex:1;">⬇️ YAML para JSON</button>
+    <button onclick="jsonToYaml()" style="flex:1;background:linear-gradient(135deg,#a855f7,#6366f1);">⬆️ JSON para YAML</button>
+  </div>
+  <p id="yaml-error" style="color:#ef4444;font-size:12px;text-align:center;"></p>
+</div>
+<script>
+function yamlToJson() {
+  try {
+    const yamlText = document.getElementById('yaml-input').value;
+    const json = jsyaml.load(yamlText);
+    document.getElementById('json-input').value = JSON.stringify(json, null, 2);
+    document.getElementById('yaml-error').textContent = '';
+  } catch(e) {
+    document.getElementById('yaml-error').textContent = 'Erro: ' + e.message;
+  }
+}
+function jsonToYaml() {
+  try {
+    const jsonText = document.getElementById('json-input').value;
+    const obj = JSON.parse(jsonText);
+    document.getElementById('yaml-input').value = jsyaml.dump(obj);
+    document.getElementById('yaml-error').textContent = '';
+  } catch(e) {
+    document.getElementById('yaml-error').textContent = 'Erro: ' + e.message;
+  }
+}
+<\/script>
+`),
+
+    'html-to-md': wrapHtml('HTML → Markdown', `
+<div style="display:flex;flex-direction:column;gap:16px;">
+  <label>HTML:</label>
+  <textarea id="html-in" rows="5" placeholder="<h1>Olá</h1><p>Mundo</p>"></textarea>
+  <button onclick="convertToMd()">⬇️ Converter para Markdown</button>
+  <label>Markdown:</label>
+  <textarea id="md-out" rows="5" readonly placeholder="resultado..."></textarea>
+</div>
+<script>
+function convertToMd() {
+  const html = document.getElementById('html-in').value;
+  const turndownService = new TurndownService();
+  const markdown = turndownService.turndown(html);
+  document.getElementById('md-out').value = markdown;
+}
+<\/script>
+`),
+
+    'seo-check': wrapHtml('SEO & Acessibilidade', `
+<div style="display:flex;flex-direction:column;gap:16px;">
+  <label>Cole seu HTML para análise:</label>
+  <textarea id="seo-in" rows="6" placeholder="<html>...</html>"></textarea>
+  <button onclick="analisarHtml()">🕵️ Analisar HTML</button>
+  <div id="seo-results" style="display:none;background:rgba(0,0,0,0.2);border-radius:8px;padding:16px;font-size:14px;line-height:1.8;">
+  </div>
+</div>
+<script>
+function analisarHtml() {
+  const html = document.getElementById('seo-in').value;
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  const results = document.getElementById('seo-results');
+  
+  let h1 = doc.querySelectorAll('h1').length;
+  let imgs = doc.querySelectorAll('img').length;
+  let imgsSemAlt = doc.querySelectorAll('img:not([alt])').length;
+  let metaDesc = doc.querySelector('meta[name="description"]') ? true : false;
+  let text = doc.body.textContent || "";
+  let words = text.trim().split(/\\s+/).filter(w => w.length > 0).length;
+
+  let htmlRes = '<h4 style="color:#00d4ff;margin-bottom:10px;">Resultados:</h4>';
+  
+  htmlRes += '<div style="display:flex;gap:8px;margin-bottom:8px;">';
+  htmlRes += h1 === 1 ? '✅ <span>Tag &lt;h1&gt; encontrada.</span>' : '❌ <span style="color:#ef4444;">Falta tag &lt;h1&gt; (ou há mais de uma).</span>';
+  htmlRes += '</div>';
+
+  htmlRes += '<div style="display:flex;gap:8px;margin-bottom:8px;">';
+  htmlRes += metaDesc ? '✅ <span>Meta description presente.</span>' : '⚠️ <span style="color:#f59e0b;">Falta meta description (SEO).</span>';
+  htmlRes += '</div>';
+
+  htmlRes += '<div style="display:flex;gap:8px;margin-bottom:8px;">';
+  htmlRes += imgsSemAlt === 0 ? '✅ <span>Todas as imagens têm alt.</span>' : '⚠️ <span style="color:#ef4444;">' + imgsSemAlt + ' imagem(ns) sem atributo alt (Acessibilidade).</span>';
+  htmlRes += '</div>';
+
+  htmlRes += '<div style="display:flex;gap:8px;">';
+  htmlRes += '📝 <span>Contagem de palavras: ' + words + '</span>';
+  htmlRes += '</div>';
+
+  results.innerHTML = htmlRes;
+  results.style.display = 'block';
+}
+<\/script>
+`),
+
+    /* === IA & TEXTO === */
+    'keyword-extractor': wrapHtml('Extrator de Palavras-chave', `
+<div style="display:flex;flex-direction:column;gap:16px;">
+  <label>Cole o texto (artigo, página, etc.):</label>
+  <textarea id="kw-input" rows="6" placeholder="Cole seu texto aqui..."></textarea>
+  <button onclick="extractKeywords()">🔑 Extrair Palavras-chave</button>
+  <div id="kw-results" style="display:flex;flex-wrap:wrap;gap:8px;min-height:40px;"></div>
+</div>
+<script>
+function extractKeywords() {
+  const text = document.getElementById('kw-input').value.toLowerCase();
+  const stopWords = ['a','o','e','de','da','do','das','dos','em','um','uma','para','com','por','no','na','nos','nas','se','que','é','como','mas','ao','aos','à','às','the','and','is','in','to','of','for','on','with','as','at','by','an','be','this','that','from','or','it','are','was'];
+  const words = text.match(/\\b[a-záàâãéèêíïóôõöúçñ]{3,}\\b/g) || [];
+  
+  const freq = {};
+  words.forEach(w => { if(!stopWords.includes(w)) freq[w] = (freq[w]||0)+1; });
+  
+  const sorted = Object.entries(freq).sort((a,b) => b[1]-a[1]).slice(0, 15);
+  
+  const container = document.getElementById('kw-results');
+  if(sorted.length === 0) {
+    container.innerHTML = '<span style="color:#888;font-size:13px;">Nenhuma palavra-chave encontrada.</span>';
+    return;
+  }
+  
+  container.innerHTML = sorted.map(s => 
+    '<span style="background:rgba(0,212,255,0.15);color:#00d4ff;border:1px solid rgba(0,212,255,0.3);padding:6px 12px;border-radius:20px;font-size:13px;font-weight:600;cursor:default;">' 
+    + s[0] + ' <span style="opacity:0.6;font-size:11px;">(' + s[1] + 'x)</span></span>'
+  ).join('');
+}
+<\/script>
+`),
+
+    'web-summarizer': wrapHtml('Resumo de Texto', `
+<div style="display:flex;flex-direction:column;gap:16px;">
+  <label>Cole o texto longo:</label>
+  <textarea id="sum-input" rows="6" placeholder="Cole o texto que deseja resumir..."></textarea>
+  <button onclick="summarizeText()">📄 Gerar Resumo</button>
+  <label>Resumo:</label>
+  <textarea id="sum-output" rows="5" readonly placeholder="O resumo aparecerá aqui..."></textarea>
+</div>
+<script>
+function summarizeText() {
+  const text = document.getElementById('sum-input').value;
+  if(!text.trim()) return;
+  
+  const sentences = text.match(/[^.!?]+[.!?]+/g) || [text];
+  if(sentences.length <= 2) { document.getElementById('sum-output').value = text; return; }
+  
+  const words = text.toLowerCase().match(/\\b[a-záàâãéèêíïóôõöúçñ]{3,}\\b/g) || [];
+  const freq = {};
+  words.forEach(w => freq[w] = (freq[w]||0)+1);
+  
+  const scoredSentences = sentences.map((s, i) => {
+    let score = 0;
+    const sWords = s.toLowerCase().match(/\\b[a-záàâãéèêíïóôõöúçñ]{3,}\\b/g) || [];
+    sWords.forEach(w => score += freq[w] || 0);
+    return { sentence: s.trim(), score, index: i };
+  });
+  
+  scoredSentences.sort((a,b) => b.score - a.score);
+  const numSentences = Math.max(1, Math.min(3, Math.floor(sentences.length / 3)));
+  const top = scoredSentences.slice(0, numSentences).sort((a,b) => a.index - b.index);
+  
+  document.getElementById('sum-output').value = top.map(t => t.sentence).join(' ');
+}
+<\/script>
+`),
+
+    'ai-prompt-generator': wrapHtml('Gerador de Prompt IA', `
+<div style="display:flex;flex-direction:column;gap:16px;">
+  <div>
+    <label>Papel (Role):</label>
+    <input type="text" id="p-role" placeholder="Ex: Analista de Marketing Sênior">
+  </div>
+  <div>
+    <label>Tarefa (Task):</label>
+    <input type="text" id="p-task" placeholder="Ex: Escrever um post para o LinkedIn">
+  </div>
+  <div>
+    <label>Contexto/Detalhes:</label>
+    <textarea id="p-context" rows="3" placeholder="Ex: Público B2B, tom profissional, foco em IA..."></textarea>
+  </div>
+  <button onclick="generatePrompt()">🤖 Gerar Prompt Perfeito</button>
+  <label>Resultado:</label>
+  <textarea id="p-out" readonly rows="6" placeholder="Seu prompt estruturado aparecerá aqui..."></textarea>
+</div>
+<script>
+function generatePrompt() {
+  const role = document.getElementById('p-role').value || '[Papel]';
+  const task = document.getElementById('p-task').value || '[Tarefa]';
+  const context = document.getElementById('p-context').value || '[Contexto]';
+  
+  const prompt = 'Atue como um ' + role + '.\\n\\nSua tarefa é: ' + task + '.\\n\\nConsidere o seguinte contexto e restrições:\\n' + context + '\\n\\nForneça uma resposta estruturada, detalhada e pronta para uso.';
+  
+  document.getElementById('p-out').value = prompt;
+}
+<\/script>
+`),
+
+    /* === DEV TOOLS === */
+    'pdf-generator': wrapHtml('Gerador de PDF', `
+<div style="display:flex;flex-direction:column;gap:16px;">
+  <label>Texto para o PDF:</label>
+  <textarea id="pdf-text" rows="6" placeholder="Digite o conteúdo do PDF aqui...">Olá, este é um PDF gerado diretamente pelo navegador!</textarea>
+  <button onclick="makePdf()">📄 Baixar PDF</button>
+</div>
+<script>
+function makePdf() {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+  const text = document.getElementById('pdf-text').value;
+  const splitText = doc.splitTextToSize(text, 180);
+  doc.text(splitText, 10, 10);
+  doc.save('documento.pdf');
+}
+<\/script>
+`),
+
+    'excel-to-html': wrapHtml('Excel/CSV para HTML', `
+<div style="display:flex;flex-direction:column;gap:16px;">
+  <label>Selecione um arquivo .xlsx ou .csv:</label>
+  <input type="file" id="excel-input" accept=".xlsx, .xls, .csv" style="padding:10px;border:1px dashed rgba(0,212,255,0.4);border-radius:8px;background:rgba(7,11,20,0.6);color:#e4e7eb;cursor:pointer;">
+  <div id="excel-preview" style="max-height:300px;overflow:auto;background:#fff;color:#000;border-radius:8px;display:none;"></div>
+</div>
+<script>
+document.getElementById('excel-input').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    const data = new Uint8Array(evt.target.result);
+    const workbook = XLSX.read(data, {type: 'array'});
+    const firstSheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[firstSheetName];
+    const html = XLSX.utils.sheet_to_html(worksheet);
+    
+    const div = document.getElementById('excel-preview');
+    div.innerHTML = html;
+    div.style.display = 'block';
+    
+    // Estilizar a tabela gerada
+    const table = div.querySelector('table');
+    if(table) {
+      table.style.width = '100%';
+      table.style.borderCollapse = 'collapse';
+      table.querySelectorAll('td, th').forEach(cell => {
+        cell.style.border = '1px solid #ccc';
+        cell.style.padding = '6px';
+      });
+    }
+  };
+  reader.readAsArrayBuffer(file);
+});
+<\/script>
+`),
+
+    'email-generator': wrapHtml('Gerador de Email', `
+<div style="display:flex;flex-direction:column;gap:16px;">
+  <div><label>Para:</label><input type="email" id="em-to" placeholder="destinatario@exemplo.com"></div>
+  <div><label>Assunto:</label><input type="text" id="em-sub" placeholder="Reunião de Alinhamento"></div>
+  <div><label>Mensagem:</label><textarea id="em-body" rows="4" placeholder="Olá, vamos agendar..."></textarea></div>
+  <button onclick="genEmail()">📧 Gerar Link e Copiar</button>
+  <textarea id="em-out" readonly rows="3" style="margin-top:10px;"></textarea>
+</div>
+<script>
+function genEmail() {
+  const to = document.getElementById('em-to').value;
+  const sub = encodeURIComponent(document.getElementById('em-sub').value);
+  const body = encodeURIComponent(document.getElementById('em-body').value);
+  const link = 'mailto:' + to + '?subject=' + sub + '&body=' + body;
+  
+  const out = document.getElementById('em-out');
+  out.value = link;
+  out.select();
+  document.execCommand('copy');
+  alert('Link mailto copiado para a área de transferência!');
+}
+<\/script>
+`),
+
+    'barcode-generator': wrapHtml('Código de Barras', `
+<div style="display:flex;flex-direction:column;gap:16px;align-items:center;">
+  <div style="width:100%;">
+    <label>Valor:</label>
+    <input type="text" id="bar-val" value="123456789012" style="margin-bottom:10px;">
+    <label>Formato:</label>
+    <select id="bar-format">
+      <option value="CODE128">CODE128</option>
+      <option value="EAN13">EAN-13</option>
+      <option value="UPC">UPC</option>
+      <option value="CODE39">CODE39</option>
+    </select>
+  </div>
+  <button onclick="genBarcode()">📊 Gerar Código</button>
+  <div style="background:#fff;padding:16px;border-radius:8px;margin-top:10px;">
+    <svg id="barcode-svg"></svg>
+  </div>
+</div>
+<script>
+function genBarcode() {
+  try {
+    const val = document.getElementById('bar-val').value;
+    const fmt = document.getElementById('bar-format').value;
+    JsBarcode("#barcode-svg", val, { format: fmt, lineColor: "#000", width: 2, height: 80, displayValue: true });
+  } catch(e) {
+    alert('Valor inválido para este formato: ' + e.message);
+  }
+}
+genBarcode();
+<\/script>
+`),
+
+    'image-manipulator': wrapHtml('Manipulador de Imagem', `
+<div style="display:flex;flex-direction:column;gap:16px;align-items:center;">
+  <input type="file" id="img-manip-input" accept="image/*" style="padding:10px;border:1px dashed rgba(0,212,255,0.4);border-radius:8px;background:rgba(7,11,20,0.6);color:#e4e7eb;cursor:pointer;width:100%;">
+  <div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center;">
+    <button onclick="manipImg('rotate')">🔄 Girar 90º</button>
+    <button onclick="manipImg('flipH')">↔️ Inverter H</button>
+    <button onclick="manipImg('flipV')">↕️ Inverter V</button>
+    <button onclick="downloadImg()" style="background:#22c55e;">⬇️ Baixar</button>
+  </div>
+  <canvas id="img-canvas" style="max-width:100%;border-radius:8px;box-shadow:0 0 20px rgba(0,212,255,0.2);margin-top:10px;"></canvas>
+</div>
+<script>
+let imgObj = new Image();
+let angle = 0, flipH = 1, flipV = 1;
+
+document.getElementById('img-manip-input').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = function(ev) {
+    imgObj.onload = function() { drawCanvas(); };
+    imgObj.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+function drawCanvas() {
+  const canvas = document.getElementById('img-canvas');
+  const ctx = canvas.getContext('2d');
+  
+  if(angle % 180 !== 0) {
+    canvas.width = imgObj.height;
+    canvas.height = imgObj.width;
+  } else {
+    canvas.width = imgObj.width;
+    canvas.height = imgObj.height;
+  }
+  
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.save();
+  ctx.translate(canvas.width/2, canvas.height/2);
+  ctx.rotate(angle * Math.PI / 180);
+  ctx.scale(flipH, flipV);
+  ctx.drawImage(imgObj, -imgObj.width/2, -imgObj.height/2);
+  ctx.restore();
+}
+
+function manipImg(action) {
+  if(!imgObj.src) return;
+  if(action === 'rotate') angle = (angle + 90) % 360;
+  if(action === 'flipH') flipH *= -1;
+  if(action === 'flipV') flipV *= -1;
+  drawCanvas();
+}
+
+function downloadImg() {
+  const canvas = document.getElementById('img-canvas');
+  if(!imgObj.src) return;
+  const link = document.createElement('a');
+  link.download = 'imagem-editada.png';
+  link.href = canvas.toDataURL('image/png');
+  link.click();
+}
+<\/script>
+`)
 };
 
 const genMeta = {
@@ -1247,7 +1681,19 @@ const genMeta = {
     dialog: { icon: '💬', name: 'Dialog', desc: 'Janela modal nativa' },
     table: { icon: '📊', name: 'Table', desc: 'Tabela com dados' },
     meter: { icon: '📏', name: 'Meter Tag', desc: 'Medida dentro de faixa' },
-    progress: { icon: '⏳', name: 'Progress Tag', desc: 'Barra de progresso' }
+    progress: { icon: '⏳', name: 'Progress Tag', desc: 'Barra de progresso' },
+    'color-palette': { icon: '🎨', name: 'Cores', desc: 'Paleta aleatória' },
+    'yaml-json': { icon: '🔄', name: 'YAML ⇄ JSON', desc: 'Conversor de dados' },
+    'html-to-md': { icon: '📝', name: 'HTML → MD', desc: 'Converter para Markdown' },
+    'seo-check': { icon: '🕵️', name: 'SEO & A11y', desc: 'Analisador HTML' },
+    'keyword-extractor': { icon: '🔑', name: 'Palavras-chave', desc: 'Extrator de texto' },
+    'web-summarizer': { icon: '📄', name: 'Resumo de Texto', desc: 'Sumarizador de texto' },
+    'ai-prompt-generator': { icon: '🤖', name: 'Gerador de Prompt', desc: 'Estruturar prompts IA' },
+    'pdf-generator': { icon: '📄', name: 'Gerador PDF', desc: 'Criar e baixar PDF' },
+    'excel-to-html': { icon: '📊', name: 'Excel/CSV', desc: 'Converter para HTML' },
+    'email-generator': { icon: '📧', name: 'Gerador Email', desc: 'Links Mailto' },
+    'barcode-generator': { icon: '🛒', name: 'Cód. de Barras', desc: 'Gerador 1D' },
+    'image-manipulator': { icon: '🖼️', name: 'Manipular Imagem', desc: 'Girar e Inverter' }
 };
 
 const genCategories = [
@@ -1255,7 +1701,10 @@ const genCategories = [
     { title: '🖼️ Mídia', keys: ['audio', 'image-tag', 'video', 'iframe'] },
     { title: '✍️ Texto e Formatação', keys: ['bdo', 'code', 'cite', 'mark', 'strong', 'em', 'strikethrough', 'supsub', 'underline', 'quote', 'hyperlink', 'list'] },
     { title: '🔧 Interativos', keys: ['details', 'dialog'] },
-    { title: '📊 Estrutura e Dados', keys: ['table', 'meter', 'progress'] }
+    { title: '📊 Estrutura e Dados', keys: ['table', 'meter', 'progress'] },
+    { title: '🛠️ Ferramentas Extras', keys: ['color-palette', 'yaml-json', 'html-to-md', 'seo-check'] },
+    { title: '🤖 IA & Texto', keys: ['keyword-extractor', 'web-summarizer', 'ai-prompt-generator'] },
+    { title: '🚀 Dev Tools (Docs & Data)', keys: ['pdf-generator', 'excel-to-html', 'email-generator', 'barcode-generator', 'image-manipulator'] }
 ];
 
 function renderGenerators() {
