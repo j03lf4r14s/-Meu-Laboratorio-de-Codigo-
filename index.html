@@ -732,7 +732,65 @@ const generators = {
     url: wrapHtml('URL Input', `<label>URL:</label><input type="url" placeholder="https://exemplo.com">`),
 
     /* === MÍDIA === */
-    audio: wrapHtml('Audio', `<audio controls style="width: 100%;"><source src="https://interactive-examples.mdn.mozilla.net/media/cc0-audio/t-rex-roar.mp3" type="audio/mpeg">Seu navegador não suporta áudio.</audio>`),
+    audio: wrapHtml('Audio — Upload & Base64', `
+<div style="display:flex;flex-direction:column;gap:16px;">
+  <label style="display:flex;flex-direction:column;gap:8px;cursor:pointer;">
+    <span style="font-size:14px;color:#b0b8c8;">🎵 Escolha um arquivo de áudio (MP3, WAV, OGG...):</span>
+    <input type="file" accept="audio/*" id="audio-input" style="padding:10px;border:1px dashed rgba(0,212,255,0.4);border-radius:8px;background:rgba(7,11,20,0.6);color:#e4e7eb;cursor:pointer;font-size:13px;width:100%;box-sizing:border-box;">
+  </label>
+  <div id="audio-preview-wrap" style="display:none;flex-direction:column;gap:12px;">
+    <div style="padding:12px;background:rgba(7,11,20,0.5);border-radius:10px;">
+      <audio id="audio-preview" controls style="width:100%;display:block;"></audio>
+    </div>
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px;flex-wrap:wrap;">
+        <span style="font-size:13px;color:#b0b8c8;">📝 Código HTML gerado:</span>
+        <button onclick="copyAudioCode()" id="copy-audio-btn" style="background:rgba(0,212,255,0.15);color:#00d4ff;border:1px solid rgba(0,212,255,0.3);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;">📋 Copiar código</button>
+      </div>
+      <textarea id="audio-code" rows="5" readonly style="width:100%;padding:10px;font-family:'JetBrains Mono',monospace;font-size:11px;background:rgba(7,11,20,0.85);color:#22c55e;border:1px solid rgba(0,212,255,0.2);border-radius:8px;resize:vertical;word-break:break-all;box-sizing:border-box;"></textarea>
+      <p id="audio-size" style="font-size:12px;color:#888;margin:8px 0 0;"></p>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var input = document.getElementById('audio-input');
+  var previewWrap = document.getElementById('audio-preview-wrap');
+  var previewAudio = document.getElementById('audio-preview');
+  var codeArea = document.getElementById('audio-code');
+  var sizeInfo = document.getElementById('audio-size');
+  input.addEventListener('change', function(e){
+    var file = e.target.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev){
+      var dataUrl = ev.target.result;
+      var mime = file.type || 'audio/mpeg';
+      previewAudio.src = dataUrl;
+      codeArea.value = '<audio controls>\\n  <source src="' + dataUrl + '" type="' + mime + '">\\n  Seu navegador não suporta áudio.\\n</audio>';
+      var kb = (dataUrl.length/1024).toFixed(1);
+      var origKb = (file.size/1024).toFixed(1);
+      var mb = (dataUrl.length/1024/1024).toFixed(2);
+      sizeInfo.textContent = '📊 Base64: ' + (dataUrl.length > 1024*1024 ? mb + ' MB' : kb + ' KB') + ' · Original: ' + origKb + ' KB · ' + file.name;
+      previewWrap.style.display = 'flex';
+    };
+    reader.readAsDataURL(file);
+  });
+  window.copyAudioCode = function(){
+    codeArea.select();
+    try {
+      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(codeArea.value); }
+      else { document.execCommand('copy'); }
+    } catch(err){ try { document.execCommand('copy'); } catch(e2){} }
+    var btn = document.getElementById('copy-audio-btn');
+    var orig = btn.textContent;
+    btn.textContent = '✓ Copiado!';
+    setTimeout(function(){ btn.textContent = orig; }, 1500);
+  };
+})();
+<\/script>
+`),
+
     'image-tag': wrapHtml('Image Tag — Upload & Base64', `
 <div style="display:flex;flex-direction:column;gap:16px;">
   <label style="display:flex;flex-direction:column;gap:8px;cursor:pointer;">
@@ -793,7 +851,67 @@ const generators = {
 })();
 <\/script>
 `),
-    video: wrapHtml('Video', `<video controls width="100%" style="border-radius: 10px; display: block;"><source src="https://interactive-examples.mdn.mozilla.net/media/cc0-videos/flower.mp4" type="video/mp4">Seu navegador não suporta vídeo.</video>`),
+
+    video: wrapHtml('Video — Upload & Base64', `
+<div style="display:flex;flex-direction:column;gap:16px;">
+  <label style="display:flex;flex-direction:column;gap:8px;cursor:pointer;">
+    <span style="font-size:14px;color:#b0b8c8;">🎬 Escolha um arquivo de vídeo (MP4, WebM...):</span>
+    <input type="file" accept="video/*" id="video-input" style="padding:10px;border:1px dashed rgba(0,212,255,0.4);border-radius:8px;background:rgba(7,11,20,0.6);color:#e4e7eb;cursor:pointer;font-size:13px;width:100%;box-sizing:border-box;">
+  </label>
+  <div id="video-preview-wrap" style="display:none;flex-direction:column;gap:12px;">
+    <div style="padding:12px;background:rgba(7,11,20,0.5);border-radius:10px;">
+      <video id="video-preview" controls style="width:100%;max-height:220px;border-radius:8px;display:block;box-shadow:0 0 20px rgba(0,212,255,0.3);"></video>
+    </div>
+    <div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;gap:8px;flex-wrap:wrap;">
+        <span style="font-size:13px;color:#b0b8c8;">📝 Código HTML gerado:</span>
+        <button onclick="copyVideoCode()" id="copy-video-btn" style="background:rgba(0,212,255,0.15);color:#00d4ff;border:1px solid rgba(0,212,255,0.3);padding:5px 12px;border-radius:6px;cursor:pointer;font-size:12px;font-weight:600;font-family:inherit;">📋 Copiar código</button>
+      </div>
+      <textarea id="video-code" rows="5" readonly style="width:100%;padding:10px;font-family:'JetBrains Mono',monospace;font-size:11px;background:rgba(7,11,20,0.85);color:#22c55e;border:1px solid rgba(0,212,255,0.2);border-radius:8px;resize:vertical;word-break:break-all;box-sizing:border-box;"></textarea>
+      <p id="video-size" style="font-size:12px;color:#888;margin:8px 0 0;"></p>
+    </div>
+  </div>
+</div>
+<script>
+(function(){
+  var input = document.getElementById('video-input');
+  var previewWrap = document.getElementById('video-preview-wrap');
+  var previewVideo = document.getElementById('video-preview');
+  var codeArea = document.getElementById('video-code');
+  var sizeInfo = document.getElementById('video-size');
+  input.addEventListener('change', function(e){
+    var file = e.target.files[0];
+    if(!file) return;
+    var reader = new FileReader();
+    reader.onload = function(ev){
+      var dataUrl = ev.target.result;
+      var mime = file.type || 'video/mp4';
+      previewVideo.src = dataUrl;
+      codeArea.value = '<video controls width="100%">\\n  <source src="' + dataUrl + '" type="' + mime + '">\\n  Seu navegador não suporta vídeo.\\n</video>';
+      var kb = (dataUrl.length/1024).toFixed(1);
+      var origKb = (file.size/1024).toFixed(1);
+      var mb = (dataUrl.length/1024/1024).toFixed(2);
+      var origMb = (file.size/1024/1024).toFixed(2);
+      sizeInfo.textContent = '📊 Base64: ' + (dataUrl.length > 1024*1024 ? mb + ' MB' : kb + ' KB') + ' · Original: ' + (file.size > 1024*1024 ? origMb + ' MB' : origKb + ' KB') + ' · ' + file.name;
+      previewWrap.style.display = 'flex';
+    };
+    reader.readAsDataURL(file);
+  });
+  window.copyVideoCode = function(){
+    codeArea.select();
+    try {
+      if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(codeArea.value); }
+      else { document.execCommand('copy'); }
+    } catch(err){ try { document.execCommand('copy'); } catch(e2){} }
+    var btn = document.getElementById('copy-video-btn');
+    var orig = btn.textContent;
+    btn.textContent = '✓ Copiado!';
+    setTimeout(function(){ btn.textContent = orig; }, 1500);
+  };
+})();
+<\/script>
+`),
+
     iframe: wrapHtml('iFrame', `<iframe srcdoc="<body style='font-family:sans-serif;background:#f0f4f8;margin:0;padding:20px'><h3 style='color:#0066cc;margin-top:0'>Olá do iframe!</h3><p>Este conteúdo está dentro de um iframe.</p></body>" width="100%" height="180" style="border: 1px solid rgba(0, 212, 255, 0.3); border-radius: 10px;" title="Exemplo"></iframe>`),
 
     /* === TEXTO === */
@@ -838,9 +956,9 @@ const genMeta = {
     text: { icon: '📝', name: 'Text Input', desc: 'Campo de texto' },
     textarea: { icon: '📄', name: 'Textarea', desc: 'Área de texto' },
     url: { icon: '🔗', name: 'URL Input', desc: 'Campo de URL' },
-    audio: { icon: '🎵', name: 'Audio', desc: 'Player de áudio' },
+    audio: { icon: '🎵', name: 'Audio', desc: 'Upload + Base64' },
     'image-tag': { icon: '🖼️', name: 'Image Tag', desc: 'Upload + Base64' },
-    video: { icon: '🎬', name: 'Video', desc: 'Player de vídeo' },
+    video: { icon: '🎬', name: 'Video', desc: 'Upload + Base64' },
     iframe: { icon: '🪟', name: 'iFrame', desc: 'Página embutida' },
     bdo: { icon: '↔️', name: 'BDO Tag', desc: 'Direção do texto' },
     code: { icon: '💻', name: 'Code Tag', desc: 'Trecho de código' },
