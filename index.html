@@ -132,6 +132,68 @@ h1{font-size:1.15rem;font-weight:700;display:flex;align-items:center;gap:10px;le
 ::-webkit-scrollbar-track{background:transparent}
 ::-webkit-scrollbar-thumb{background:rgba(100,140,255,.2);border-radius:4px}
 ::-webkit-scrollbar-thumb:hover{background:rgba(0,212,255,.4)}
+
+/* === REDES === */
+#network-container{display:none;flex:1;flex-direction:column;overflow-y:auto;padding:20px;gap:18px;min-height:0}
+#network-container.active{display:flex}
+.net-input-group{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;}
+.net-input-group input{padding:12px 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:rgba(7,11,20,.6);color:var(--text);font-family:'JetBrains Mono',monospace;font-size:1.1rem;outline:none;transition:all .2s}
+.net-input-group input:focus{border-color:var(--primary);box-shadow:0 0 0 3px rgba(0,212,255,.15)}
+.net-input-group input#net-ip{flex:2;min-width:200px}
+.net-input-group input#net-cidr{flex:1;max-width:100px;text-align:center}
+#network-output{flex:1;display:none;flex-direction:column;padding:24px;overflow:auto;min-height:0;background:rgba(7,11,20,.4);gap:16px}
+#network-output.active{display:flex}
+.net-res-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.net-res-card{background:linear-gradient(135deg,rgba(20,26,46,.9),rgba(13,18,32,.9));border:1px solid var(--border);border-radius:var(--radius-md);padding:16px;display:flex;flex-direction:column;gap:6px;box-shadow:0 4px 12px rgba(0,0,0,.2)}
+.net-res-label{font-size:.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+.net-res-value{font-size:1.2rem;color:var(--primary);font-family:'JetBrains Mono',monospace;font-weight:700;word-break:break-all}
+.net-res-sub{font-size:.8rem;color:var(--text-dim);margin-top:4px}
+.net-badge{display:inline-block;padding:4px 10px;border-radius:12px;font-size:.75rem;font-weight:700;margin-top:6px;}
+.net-badge.private{background:rgba(34,197,94,.15);color:#4ade80;border:1px solid rgba(34,197,94,.3)}
+.net-badge.public{background:rgba(234,179,8,.15);color:#facc15;border:1px solid rgba(234,179,8,.3)}
+.net-badge.warning{background:rgba(239,68,68,.15);color:#ef4444;border:1px solid rgba(239,68,68,.3)}
+.net-alert{padding:12px;border-radius:8px;font-size:.85rem;line-height:1.5;margin-bottom:12px;display:flex;gap:8px;align-items:flex-start;}
+.net-alert.warning{background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.3);color:#fcd34d;}
+.net-alert.info{background:rgba(0,212,255,.1);border:1px solid rgba(0,212,255,.3);color:#67e8f9;}
+
+/* Tabela de Sub-redes e Domínios */
+.net-table-wrapper {
+    background: rgba(7,11,20,.6);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,.3);
+}
+.net-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    text-align: left;
+}
+.net-table th, .net-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+}
+.net-table th {
+    background: rgba(0, 212, 255, 0.08);
+    color: var(--primary);
+    font-weight: 600;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    backdrop-filter: blur(10px);
+}
+.net-table td {
+    color: var(--text-dim);
+    font-family: 'JetBrains Mono', monospace;
+}
+.net-table tr:hover td {
+    background: rgba(100, 140, 255, 0.05);
+    color: var(--text);
+}
+.net-table td:nth-child(1) { color: var(--accent); font-weight: 600; }
+.net-table td:nth-child(3), .net-table td:nth-child(4) { text-align: right; }
+.net-table tr:last-child td { border-bottom: none; }
 </style>
 </head>
 <body>
@@ -148,6 +210,7 @@ h1{font-size:1.15rem;font-weight:700;display:flex;align-items:center;gap:10px;le
         <button class="lang-btn" data-lang="python">Python</button>
         <button class="lang-btn" data-lang="generator">🎨 Gerador</button>
         <button class="lang-btn" data-lang="qr">📱 QR Code</button>
+        <button class="lang-btn" data-lang="network">🌐 Redes</button>
         <button class="lang-btn" data-lang="library">💾 Salvos</button>
     </div>
 </header>
@@ -294,6 +357,61 @@ h1{font-size:1.15rem;font-weight:700;display:flex;align-items:center;gap:10px;le
             </div>
         </div>
 
+        <!-- ===== REDES (NOVA ABA) ===== -->
+        <div id="network-container">
+            <div class="gen-header">
+                <h3>🌐 Analisador de Redes</h3>
+                <p>Insira um endereço IP e a máscara de sub-rede (CIDR) para calcular todos os parâmetros da rede.</p>
+            </div>
+            <div class="qr-section">
+                <label class="qr-label" style="font-size:0.95rem;">Endereço IP e Máscara (CIDR)</label>
+                <div class="net-input-group">
+                    <input type="text" id="net-ip" placeholder="192.168.1.10" value="192.168.1.10">
+                    <input type="text" id="net-cidr" placeholder="/24" value="/24">
+                    <button class="secondary-btn" id="net-suggest-btn" style="padding:12px 16px;">✨ Sugerir CIDR</button>
+                </div>
+                <button class="run-btn" id="net-analyze-btn" style="width:100%; padding:12px; font-size:1rem;">🔍 Analisar Bloco de IP</button>
+            </div>
+            
+            <div class="qr-section" style="margin-top:10px;">
+                <p style="font-size:12px;color:var(--text-muted);line-height:1.6;">
+                    <strong>Dicas:</strong><br>
+                    • Você pode usar barras como <code>192.168.1.10/24</code> diretamente no campo de IP.<br>
+                    • A máscara aceita valores de <code>/0</code> (0.0.0.0) a <code>/32</code> (255.255.255.255).<br>
+                    • O botão <b>"✨ Sugerir CIDR"</b> preenche a máscara padrão com base na classe do IP (A=/8, B=/16, C=/24).
+                </p>
+            </div>
+
+            <!-- ===== CONVERSOR DE DOMÍNIO ===== -->
+            <div class="qr-section" style="border-top:1px solid var(--border);padding-top:16px;margin-top:8px;">
+                <label class="qr-label" style="font-size:0.95rem;color:var(--primary);">🔍 Conversor de Domínio para IP</label>
+                <p style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">Insira uma lista de nomes de domínio, um por linha, e clique em converter.</p>
+                <textarea id="domain-input" placeholder="google.com&#10;cloudflare.com&#10;github.com" rows="4" style="padding:10px;font-family:'JetBrains Mono',monospace;font-size:13px;background:rgba(7,11,20,0.85);color:#22c55e;border:1px solid rgba(0,212,255,0.2);border-radius:8px;resize:vertical;word-break:break-all;box-sizing:border-box;width:100%;margin-bottom:10px;"></textarea>
+                <button class="run-btn" id="domain-convert-btn" style="width:100%; padding:12px; font-size:1rem;">🔄 Converter Domínios</button>
+            </div>
+
+            <!-- ===== TABELA DE SUB-REDES ===== -->
+            <div class="qr-section" style="border-top:1px solid var(--border);padding-top:16px;margin-top:8px;">
+                <label class="qr-label" style="font-size:0.95rem;color:var(--primary);">📊 Tabela de Sub-redes IPv4 (CIDR)</label>
+                <p style="font-size:11px;color:var(--text-muted);margin-bottom:12px;">Referência completa de máscaras de sub-rede, IPs totais e utilizáveis.</p>
+                <div class="net-table-wrapper">
+                    <table class="net-table">
+                        <thead>
+                            <tr>
+                                <th>Prefixo CIDR</th>
+                                <th>Máscara de Sub-rede</th>
+                                <th>Total de IPs</th>
+                                <th>IPs Utilizáveis</th>
+                            </tr>
+                        </thead>
+                        <tbody id="net-table-body">
+                            <!-- Injetado via JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
         <div id="library-container">
             <div class="library-toolbar">
                 <input type="text" id="library-search" placeholder="🔍 Buscar por título ou conteúdo...">
@@ -317,6 +435,24 @@ h1{font-size:1.15rem;font-weight:700;display:flex;align-items:center;gap:10px;le
         <div id="qr-output">
             <div id="qr-canvas-wrap">
                 <div class="qr-placeholder">QR Code aparecerá aqui</div>
+            </div>
+        </div>
+        <!-- SAÍDA DA ABA REDES -->
+        <div id="network-output">
+            <div id="net-alerts"></div>
+            <div class="net-res-grid" id="net-res-grid">
+                <!-- Os resultados serão injetados aqui -->
+            </div>
+        </div>
+        
+        <!-- SAÍDA DO CONVERSOR DE DOMÍNIO -->
+        <div id="domain-output" style="display:none; flex-direction:column; padding:24px; overflow:auto; min-height:0; background:rgba(7,11,20,.4); gap:16px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <h3 style="color:var(--primary); font-size:1.1rem; font-weight:600;">Resultados da Conversão</h3>
+                <button class="secondary-btn" onclick="document.getElementById('domain-output').style.display='none'; document.getElementById('network-output').classList.add('active');">Voltar</button>
+            </div>
+            <div id="domain-res-grid" class="net-table-wrapper">
+                <p style="padding:20px; text-align:center; color:var(--text-dim);">Insira domínios e clique em converter para ver os resultados.</p>
             </div>
         </div>
     </div>
@@ -345,6 +481,10 @@ h1{font-size:1.15rem;font-weight:700;display:flex;align-items:center;gap:10px;le
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/docx@8.5.0/build/index.umd.js"></script>
 
 <script>
 /* ==== FIBRAS DE FUNDO ==== */
@@ -887,6 +1027,306 @@ document.getElementById('img-to-b64-clear').onclick = () => {
     document.getElementById('img-to-b64-output').value = '';
     imgToB64DataUrl = null;
 };
+
+/* ==== REDES: IP BLOCK ANALYZER ==== */
+function ipToInt(ip) {
+    return ip.split('.').reduce((int, octet) => (int << 8) + parseInt(octet, 10), 0) >>> 0;
+}
+
+function intToIp(int) {
+    return [(int >>> 24) & 255, (int >>> 16) & 255, (int >>> 8) & 255, int & 255].join('.');
+}
+
+function intToBinary(int) {
+    return int.toString(2).padStart(32, '0').match(/.{1,8}/g).join('.');
+}
+
+function cidrToMask(cidr) {
+    return cidr === 0 ? 0 : (~0 << (32 - cidr)) >>> 0;
+}
+
+function getIpClass(ipInt) {
+    if (ipInt >= 0 && ipInt <= 0x7FFFFFFF) return { class: 'A', defaultCidr: 8 };
+    if (ipInt >= 0x80000000 && ipInt <= 0xBFFFFFFF) return { class: 'B', defaultCidr: 16 };
+    if (ipInt >= 0xC0000000 && ipInt <= 0xDFFFFFFF) return { class: 'C', defaultCidr: 24 };
+    if (ipInt >= 0xE0000000 && ipInt <= 0xEFFFFFFF) return { class: 'D', defaultCidr: 4 };
+    return { class: 'E', defaultCidr: 4 };
+}
+
+function isPrivateIp(int) {
+    if ((int & 0xFF000000) === 0x0A000000) return true;
+    if ((int & 0xFFF00000) === 0xAC100000) return true;
+    if ((int & 0xFFFF0000) === 0xC0A80000) return true;
+    if ((int & 0xFF000000) === 0x7F000000) return true;
+    return false;
+}
+
+document.getElementById('net-suggest-btn').onclick = () => {
+    let ipStr = document.getElementById('net-ip').value.trim();
+    if (ipStr.includes('/')) ipStr = ipStr.split('/')[0];
+    
+    if (!/^(\d{1,3}\.){3}\d{1,3}$/.test(ipStr)) { alert('Digite um IP válido primeiro.'); return; }
+    const octets = ipStr.split('.').map(Number);
+    if (octets.some(o => o < 0 || o > 255)) { alert('IP inválido.'); return; }
+
+    const ipInt = ipToInt(ipStr);
+    const cls = getIpClass(ipInt);
+    
+    document.getElementById('net-cidr').value = '/' + cls.defaultCidr;
+    document.getElementById('net-analyze-btn').click();
+};
+
+function analyzeNetwork() {
+    const ipInput = document.getElementById('net-ip').value.trim();
+    let cidrInput = document.getElementById('net-cidr').value.trim();
+    const alertsDiv = document.getElementById('net-alerts');
+    alertsDiv.innerHTML = '';
+    
+    let ipStr = ipInput;
+    if (ipInput.includes('/')) {
+        const parts = ipInput.split('/');
+        ipStr = parts[0];
+        cidrInput = parts[1];
+    }
+    
+    if (cidrInput.startsWith('/')) cidrInput = cidrInput.substring(1);
+    const cidr = parseInt(cidrInput, 10);
+
+    if (!/^(\d{1,3}\.){3}\d{1,3}$/.test(ipStr)) { alert('Endereço IP inválido.'); return; }
+    const octets = ipStr.split('.').map(Number);
+    if (octets.some(o => o < 0 || o > 255)) { alert('Cada octeto do IP deve estar entre 0 e 255.'); return; }
+    if (isNaN(cidr) || cidr < 0 || cidr > 32) { alert('Máscara CIDR deve ser entre 0 e 32.'); return; }
+
+    const ipInt = ipToInt(ipStr);
+    const maskInt = cidrToMask(cidr);
+    const networkInt = (ipInt & maskInt) >>> 0;
+    const broadcastInt = (networkInt | (~maskInt)) >>> 0;
+    
+    const cls = getIpClass(ipInt);
+    
+    if (ipInt !== networkInt) {
+        alertsDiv.innerHTML += `
+            <div class="net-alert warning">
+                <span>⚠️</span>
+                <div><strong>Atenção: Este não é um endereço de rede.</strong><br>
+                O IP <code>${ipStr}</code> pertence à rede <code>${intToIp(networkInt)}/${cidr}</code>. 
+                O endereço de rede real é <code>${intToIp(networkInt)}</code>.</div>
+            </div>
+        `;
+    }
+    
+    if (ipInt === broadcastInt && cidr < 31) {
+        alertsDiv.innerHTML += `
+            <div class="net-alert warning">
+                <span>⚠️</span>
+                <div><strong>Este é o endereço de Broadcast!</strong><br>
+                O IP <code>${ipStr}</code> é o endereço de broadcast da rede. Ele não pode ser usado como host.</div>
+            </div>
+        `;
+    }
+    
+    if (cidr !== cls.defaultCidr) {
+        let type = cidr > cls.defaultCidr ? "Subnet (Sub-rede)" : "Supernet (Super-rede)";
+        alertsDiv.innerHTML += `
+            <div class="net-alert info">
+                <span>ℹ️</span>
+                <div><strong>Máscara fora do padrão da Classe ${cls.class}.</strong><br>
+                A máscara padrão para um IP Classe ${cls.class} é <code>/${cls.defaultCidr}</code>. 
+                Você está usando <code>/${cidr}</code>, o que cria uma <strong>${type}</strong>.</div>
+            </div>
+        `;
+    }
+
+    let firstHostInt = networkInt + 1;
+    let lastHostInt = broadcastInt - 1;
+    
+    let totalHosts = Math.pow(2, 32 - cidr);
+    let usableHosts = totalHosts - 2;
+    
+    if (cidr === 32) { firstHostInt = lastHostInt = networkInt; totalHosts = 1; usableHosts = 1; }
+    else if (cidr === 31) { firstHostInt = networkInt; lastHostInt = broadcastInt; totalHosts = 2; usableHosts = 2; }
+    else if (usableHosts < 0) { usableHosts = 0; }
+
+    const isPrivate = isPrivateIp(ipInt);
+    
+    const grid = document.getElementById('net-res-grid');
+    grid.innerHTML = `
+        <div class="net-res-card">
+            <div class="net-res-label">Endereço de Rede</div>
+            <div class="net-res-value">${intToIp(networkInt)}</div>
+            <div class="net-res-sub">${intToBinary(networkInt)}</div>
+        </div>
+        <div class="net-res-card">
+            <div class="net-res-label">Endereço de Broadcast</div>
+            <div class="net-res-value">${intToIp(broadcastInt)}</div>
+            <div class="net-res-sub">${intToBinary(broadcastInt)}</div>
+        </div>
+        <div class="net-res-card">
+            <div class="net-res-label">Máscara de Sub-rede</div>
+            <div class="net-res-value">${intToIp(maskInt)}</div>
+            <div class="net-res-sub">/${cidr}</div>
+        </div>
+        <div class="net-res-card">
+            <div class="net-res-label">Wildcard (Inverso)</div>
+            <div class="net-res-value">${intToIp((~maskInt) >>> 0)}</div>
+            <div class="net-res-sub">0.0.0.0 - ${intToIp(~maskInt)}</div>
+        </div>
+        <div class="net-res-card">
+            <div class="net-res-label">Primeiro IP Válido</div>
+            <div class="net-res-value" style="color:#22c55e;">${intToIp(firstHostInt)}</div>
+            <div class="net-res-sub">Host inicial</div>
+        </div>
+        <div class="net-res-card">
+            <div class="net-res-label">Último IP Válido</div>
+            <div class="net-res-value" style="color:#22c55e;">${intToIp(lastHostInt)}</div>
+            <div class="net-res-sub">Host final</div>
+        </div>
+        <div class="net-res-card">
+            <div class="net-res-label">Total de Hosts</div>
+            <div class="net-res-value" style="color:#a855f7;">${totalHosts.toLocaleString('pt-BR')}</div>
+            <div class="net-res-sub">${usableHosts.toLocaleString('pt-BR')} utilizáveis</div>
+        </div>
+        <div class="net-res-card">
+            <div class="net-res-label">Detalhes Adicionais</div>
+            <div class="net-res-value">Classe ${cls.class}</div>
+            <div class="net-res-sub">
+                <span class="net-badge ${isPrivate ? 'private' : 'public'}">
+                    ${isPrivate ? 'IP Privado' : 'IP Público'}
+                </span>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('domain-output').style.display = 'none';
+    document.getElementById('network-output').classList.add('active');
+}
+
+document.getElementById('net-analyze-btn').onclick = analyzeNetwork;
+
+/* ==== TABELA DE SUB-REDES (CIDR) ==== */
+const cidrData = [
+    { cidr: 32, mask: '255.255.255.255', total: 1, usable: 1 },
+    { cidr: 31, mask: '255.255.255.254', total: 2, usable: 2 },
+    { cidr: 30, mask: '255.255.255.252', total: 4, usable: 2 },
+    { cidr: 29, mask: '255.255.255.248', total: 8, usable: 6 },
+    { cidr: 28, mask: '255.255.255.240', total: 16, usable: 14 },
+    { cidr: 27, mask: '255.255.255.224', total: 32, usable: 30 },
+    { cidr: 26, mask: '255.255.255.192', total: 64, usable: 62 },
+    { cidr: 25, mask: '255.255.255.128', total: 128, usable: 126 },
+    { cidr: 24, mask: '255.255.255.0', total: 256, usable: 254 },
+    { cidr: 23, mask: '255.255.254.0', total: 512, usable: 510 },
+    { cidr: 22, mask: '255.255.252.0', total: 1024, usable: 1022 },
+    { cidr: 21, mask: '255.255.248.0', total: 2048, usable: 2046 },
+    { cidr: 20, mask: '255.255.240.0', total: 4096, usable: 4094 },
+    { cidr: 19, mask: '255.255.224.0', total: 8192, usable: 8190 },
+    { cidr: 18, mask: '255.255.192.0', total: 16384, usable: 16382 },
+    { cidr: 17, mask: '255.255.128.0', total: 32768, usable: 32766 },
+    { cidr: 16, mask: '255.255.0.0', total: 65536, usable: 65534 },
+    { cidr: 15, mask: '255.254.0.0', total: 131072, usable: 131070 },
+    { cidr: 14, mask: '255.252.0.0', total: 262144, usable: 262142 },
+    { cidr: 13, mask: '255.248.0.0', total: 524288, usable: 524286 },
+    { cidr: 12, mask: '255.240.0.0', total: 1048576, usable: 1048574 },
+    { cidr: 11, mask: '255.224.0.0', total: 2097152, usable: 2097150 },
+    { cidr: 10, mask: '255.192.0.0', total: 4194304, usable: 4194302 },
+    { cidr: 9, mask: '255.128.0.0', total: 8388608, usable: 8388606 },
+    { cidr: 8, mask: '255.0.0.0', total: 16777216, usable: 16777214 },
+    { cidr: 7, mask: '254.0.0.0', total: 33554432, usable: 33554430 },
+    { cidr: 6, mask: '252.0.0.0', total: 67108864, usable: 67108862 },
+    { cidr: 5, mask: '248.0.0.0', total: 134217728, usable: 134217726 },
+    { cidr: 4, mask: '240.0.0.0', total: 268435456, usable: 268435454 },
+    { cidr: 3, mask: '224.0.0.0', total: 536870912, usable: 536870910 },
+    { cidr: 2, mask: '192.0.0.0', total: 1073741824, usable: 1073741822 },
+    { cidr: 1, mask: '128.0.0.0', total: 2147483648, usable: 2147483646 },
+    { cidr: 0, mask: '0.0.0.0', total: 4294967296, usable: 4294967294 }
+];
+
+function renderCidrTable() {
+    const tbody = document.getElementById('net-table-body');
+    tbody.innerHTML = cidrData.map(row => `
+        <tr>
+            <td>/${row.cidr}</td>
+            <td>${row.mask}</td>
+            <td>${row.total.toLocaleString('pt-BR')}</td>
+            <td>${row.usable.toLocaleString('pt-BR')}</td>
+        </tr>
+    `).join('');
+}
+renderCidrTable();
+
+/* ==== CONVERSOR DE DOMÍNIO PARA IP ==== */
+async function convertDomains() {
+    const input = document.getElementById('domain-input').value;
+    const domains = input.split('\n').map(d => d.trim()).filter(d => d.length > 0);
+    
+    if(!domains.length) { alert('Insira pelo menos um domínio.'); return; }
+
+    const btn = document.getElementById('domain-convert-btn');
+    btn.disabled = true;
+    btn.textContent = '⏳ Consultando DNS...';
+
+    document.getElementById('network-output').classList.remove('active');
+    const domainOut = document.getElementById('domain-output');
+    domainOut.style.display = 'flex';
+    const grid = document.getElementById('domain-res-grid');
+    grid.innerHTML = '<p style="padding:20px; text-align:center; color:var(--text-dim);">Consultando servidores DNS...</p>';
+
+    const results = [];
+    
+    // Consulta usando Cloudflare DoH (Suporta CORS para o navegador)
+    await Promise.all(domains.map(async (domain) => {
+        try {
+            const res = await fetch(`https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(domain)}&type=A`, {
+                headers: { 'accept': 'application/dns-json' }
+            });
+            const data = await res.json();
+            
+            if (data.Answer && data.Answer.length > 0) {
+                // Filtra apenas registros do tipo A (IPs IPv4)
+                const ips = data.Answer.filter(a => a.type === 1).map(a => a.data).join(', ');
+                if (ips) {
+                    results.push({ domain, ip: ips, status: 'ok' });
+                } else {
+                    results.push({ domain, ip: 'Sem IP (Apenas CNAME)', status: 'error' });
+                }
+            } else {
+                results.push({ domain, ip: 'Não encontrado', status: 'error' });
+            }
+        } catch (e) {
+            results.push({ domain, ip: 'Erro na consulta', status: 'error' });
+        }
+    }));
+
+    // Mantém a ordem em que os domínios foram digitados
+    results.sort((a, b) => domains.indexOf(a.domain) - domains.indexOf(b.domain));
+
+    grid.innerHTML = `
+        <table class="net-table">
+            <thead>
+                <tr>
+                    <th>Domínio</th>
+                    <th>Endereço IP</th>
+                    <th style="text-align:right;">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${results.map(r => `
+                    <tr>
+                        <td style="color:var(--text);">${escapeHtml(r.domain)}</td>
+                        <td style="color:var(--primary); font-weight:600;">${escapeHtml(r.ip)}</td>
+                        <td style="text-align:right; color:${r.status === 'ok' ? '#22c55e' : '#ef4444'};">
+                            ${r.status === 'ok' ? '✅ OK' : '❌ Falha'}
+                        </td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+
+    btn.disabled = false;
+    btn.textContent = '🔄 Converter Domínios';
+}
+
+document.getElementById('domain-convert-btn').onclick = convertDomains;
 
 /* ==== LIBRARY ==== */
 function renderLibrary(filter = '') {
@@ -1464,20 +1904,122 @@ function generatePrompt() {
 `),
 
     /* === DEV TOOLS === */
-    'pdf-generator': wrapHtml('Gerador de PDF', `
+    'doc-converter': wrapHtml('Conversor de Documentos', `
 <div style="display:flex;flex-direction:column;gap:16px;">
-  <label>Texto para o PDF:</label>
-  <textarea id="pdf-text" rows="6" placeholder="Digite o conteúdo do PDF aqui...">Olá, este é um PDF gerado diretamente pelo navegador!</textarea>
-  <button onclick="makePdf()">📄 Baixar PDF</button>
+  <p style="font-size:13px;color:#b0b8c8;text-align:center;">Converta arquivos <b>.docx</b> para PDF ou <b>.pdf</b> para Word (.docx).</p>
+  <label style="display:flex;flex-direction:column;align-items:center;justify-content:center;padding:30px;border:2px dashed rgba(0,212,255,0.4);border-radius:12px;background:rgba(7,11,20,0.6);cursor:pointer;transition:0.2s;" id="drop-zone">
+    <span style="font-size:2rem;margin-bottom:10px;">📄</span>
+    <span style="font-size:14px;color:#00d4ff;font-weight:600;">Clique para selecionar o arquivo</span>
+    <span style="font-size:12px;color:#888;margin-top:4px;">(Aceita .docx ou .pdf)</span>
+    <input type="file" id="doc-conv-input" accept=".docx, .pdf" style="display:none;">
+  </label>
+  <div id="doc-conv-status" style="font-size:14px;color:#00d4ff;text-align:center;min-height:20px;font-weight:600;">Aguardando arquivo...</div>
 </div>
 <script>
-function makePdf() {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  const text = document.getElementById('pdf-text').value;
-  const splitText = doc.splitTextToSize(text, 180);
-  doc.text(splitText, 10, 10);
-  doc.save('documento.pdf');
+const dropZone = document.getElementById('drop-zone');
+const fileInput = document.getElementById('doc-conv-input');
+const statusDiv = document.getElementById('doc-conv-status');
+
+dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.style.borderColor = '#00d4ff'; dropZone.style.background = 'rgba(0,212,255,0.1)'; });
+dropZone.addEventListener('dragleave', () => { dropZone.style.borderColor = 'rgba(0,212,255,0.4)'; dropZone.style.background = 'rgba(7,11,20,0.6)'; });
+dropZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  dropZone.style.borderColor = 'rgba(0,212,255,0.4)';
+  dropZone.style.background = 'rgba(7,11,20,0.6)';
+  if (e.dataTransfer.files.length) {
+    fileInput.files = e.dataTransfer.files;
+    handleFile(e.dataTransfer.files[0]);
+  }
+});
+
+fileInput.addEventListener('change', (e) => {
+  if (e.target.files.length) handleFile(e.target.files[0]);
+});
+
+async function handleFile(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  statusDiv.textContent = '⏳ Processando ' + file.name + '...';
+
+  if (ext === 'docx') {
+    const arrayBuffer = await file.arrayBuffer();
+    mammoth.convertToHtml({arrayBuffer: arrayBuffer})
+      .then(async function(result) {
+        const html = result.value;
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = html;
+        tempDiv.style.padding = '40px';
+        tempDiv.style.fontFamily = 'Arial, sans-serif';
+        tempDiv.style.color = '#000';
+        tempDiv.style.background = '#fff';
+        tempDiv.style.width = '800px';
+        tempDiv.style.position = 'fixed';
+        tempDiv.style.left = '-9999px'; 
+        
+        document.body.appendChild(tempDiv);
+        
+        try {
+          const canvas = await html2canvas(tempDiv, { scale: 2 });
+          const imgData = canvas.toDataURL('image/png');
+          const { jsPDF } = window.jspdf;
+          const pdf = new jsPDF('p', 'mm', 'a4');
+          
+          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+          
+          pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+          pdf.save(file.name.replace('.docx', '.pdf'));
+          
+          statusDiv.innerHTML = '✅ <span style="color:#22c55e;">Word convertido para PDF com sucesso!</span>';
+        } catch(err) {
+          statusDiv.innerHTML = '❌ Erro ao gerar PDF: ' + err.message;
+        } finally {
+          document.body.removeChild(tempDiv);
+        }
+      })
+      .catch(err => { statusDiv.innerHTML = '❌ Erro ao ler Word: ' + err.message; });
+  } 
+  else if (ext === 'pdf') {
+    const arrayBuffer = await file.arrayBuffer();
+    const pdfjsLib = window['pdfjs-dist/build/pdf'];
+    pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    
+    try {
+      const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+      let fullText = '';
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const textContent = await page.getTextContent();
+        const pageText = textContent.items.map(item => item.str).join(' ');
+        fullText += pageText + '\n\n';
+      }
+      
+      const { Document, Packer, Paragraph, TextRun } = window.docx;
+      const doc = new Document({
+        sections: [{
+          properties: {},
+          children: fullText.split('\n').map(line => 
+            new Paragraph({
+              children: [new TextRun(line)]
+            })
+          )
+        }]
+      });
+      
+      const blob = await Packer.toBlob(doc);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = file.name.replace('.pdf', '.docx');
+      a.click();
+      URL.revokeObjectURL(url);
+      
+      statusDiv.innerHTML = '✅ <span style="color:#22c55e;">PDF convertido para Word com sucesso!</span>';
+    } catch(err) {
+      statusDiv.innerHTML = '❌ Erro ao ler PDF: ' + err.message;
+    }
+  } else {
+    statusDiv.innerHTML = '❌ Formato não suportado. Use .docx ou .pdf';
+  }
 }
 <\/script>
 `),
@@ -1504,7 +2046,6 @@ document.getElementById('excel-input').addEventListener('change', function(e) {
     div.innerHTML = html;
     div.style.display = 'block';
     
-    // Estilizar a tabela gerada
     const table = div.querySelector('table');
     if(table) {
       table.style.width = '100%';
@@ -1689,7 +2230,7 @@ const genMeta = {
     'keyword-extractor': { icon: '🔑', name: 'Palavras-chave', desc: 'Extrator de texto' },
     'web-summarizer': { icon: '📄', name: 'Resumo de Texto', desc: 'Sumarizador de texto' },
     'ai-prompt-generator': { icon: '🤖', name: 'Gerador de Prompt', desc: 'Estruturar prompts IA' },
-    'pdf-generator': { icon: '📄', name: 'Gerador PDF', desc: 'Criar e baixar PDF' },
+    'doc-converter': { icon: '📑', name: 'Conversor Docs', desc: 'Word ⇄ PDF' },
     'excel-to-html': { icon: '📊', name: 'Excel/CSV', desc: 'Converter para HTML' },
     'email-generator': { icon: '📧', name: 'Gerador Email', desc: 'Links Mailto' },
     'barcode-generator': { icon: '🛒', name: 'Cód. de Barras', desc: 'Gerador 1D' },
@@ -1704,7 +2245,7 @@ const genCategories = [
     { title: '📊 Estrutura e Dados', keys: ['table', 'meter', 'progress'] },
     { title: '🛠️ Ferramentas Extras', keys: ['color-palette', 'yaml-json', 'html-to-md', 'seo-check'] },
     { title: '🤖 IA & Texto', keys: ['keyword-extractor', 'web-summarizer', 'ai-prompt-generator'] },
-    { title: '🚀 Dev Tools (Docs & Data)', keys: ['pdf-generator', 'excel-to-html', 'email-generator', 'barcode-generator', 'image-manipulator'] }
+    { title: '🚀 Dev Tools (Docs & Data)', keys: ['doc-converter', 'excel-to-html', 'email-generator', 'barcode-generator', 'image-manipulator'] }
 ];
 
 function renderGenerators() {
@@ -1741,9 +2282,12 @@ function loadGenerator(key) {
     document.getElementById('generator-container').classList.remove('active');
     document.getElementById('library-container').classList.remove('active');
     document.getElementById('qr-container').classList.remove('active');
+    document.getElementById('network-container').classList.remove('active');
     document.getElementById('output').style.display = 'block';
     document.getElementById('console-output').style.display = 'none';
     document.getElementById('qr-output').classList.remove('active');
+    document.getElementById('network-output').classList.remove('active');
+    document.getElementById('domain-output').style.display = 'none';
     ['save-btn', 'run-btn', 'delete-btn', 'format-btn', 'minify-btn'].forEach(id => {
         document.getElementById(id).style.display = 'inline-block';
     });
@@ -1811,9 +2355,12 @@ function switchMode(lang) {
     const genEl = document.getElementById('generator-container');
     const libEl = document.getElementById('library-container');
     const qrEl = document.getElementById('qr-container');
+    const netEl = document.getElementById('network-container');
     const iframe = document.getElementById('output');
     const con = document.getElementById('console-output');
     const qrOut = document.getElementById('qr-output');
+    const netOut = document.getElementById('network-output');
+    const domOut = document.getElementById('domain-output');
     const saveBtn = document.getElementById('save-btn');
     const runBtn = document.getElementById('run-btn');
     const delBtn = document.getElementById('delete-btn');
@@ -1821,14 +2368,21 @@ function switchMode(lang) {
     const minBtn = document.getElementById('minify-btn');
     const title = document.getElementById('pane-title');
     const outputTitle = document.getElementById('output-title');
+    
     edEl.style.display = 'none';
     genEl.classList.remove('active');
     libEl.classList.remove('active');
     qrEl.classList.remove('active');
+    netEl.classList.remove('active');
+    
     iframe.style.display = 'none';
     con.style.display = 'none';
     qrOut.classList.remove('active');
+    netOut.classList.remove('active');
+    domOut.style.display = 'none';
+    
     [saveBtn, runBtn, delBtn, fmtBtn, minBtn].forEach(b => b.style.display = 'none');
+    
     if (lang === 'library') {
         libEl.classList.add('active'); title.textContent = 'Códigos Salvos'; outputTitle.textContent = 'Resultado';
         iframe.style.display = 'block'; renderLibrary(document.getElementById('library-search').value); return;
@@ -1841,6 +2395,17 @@ function switchMode(lang) {
         genEl.classList.add('active'); title.textContent = '🎨 Gerador HTML'; outputTitle.textContent = 'Resultado';
         iframe.style.display = 'block'; return;
     }
+    if (lang === 'network') {
+        netEl.classList.add('active'); title.textContent = '🌐 Tabela de Redes'; outputTitle.textContent = '📊 Resultado da Análise';
+        // Se o domain output estava visível, mantém visível ao trocar de aba, caso contrário mostra o network normal
+        if(domOut.style.display === 'none' || !domOut.innerHTML.includes('table')) {
+            netOut.classList.add('active');
+        } else {
+            domOut.style.display = 'flex';
+        }
+        return;
+    }
+    
     edEl.style.display = 'block';
     [saveBtn, runBtn, delBtn, fmtBtn, minBtn].forEach(b => b.style.display = 'inline-block');
     title.textContent = 'Código'; outputTitle.textContent = 'Resultado';
